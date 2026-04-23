@@ -1,6 +1,6 @@
 # Sistema Gestión de cafetería Equipo#2
 
-***Integrantes***
+## Integrantes
 - Irad Francisco Canché Galván
 - Victor Manuel González Nahuat
 - Edrei Enrique Lizama Solís
@@ -8,13 +8,14 @@
 - Juan José Vargas Arvizu
   
 
-***Objetivo***
+## Objetivo
 Nuestro objetivo es crear y desarrollar un sistema de gestión de cafetería, el cual debe permitir que el negocio maneje sus actividades de forma fluída y eficiente. Este sistema simplificará la vida a los dueños y trabajadores del negocio, ya que podrán gestionar desde los ingredientes, hasta los descuentos de los clientes.
 
 
-***Etapas del proyecto***
+## Etapas del proyecto
 
-**Etapa 1** (Primera entrega): Se entregaron los diagramas iniciales para la construcción del proyecto.
+## Etapa 1 (Primera entrega)
+Se entregaron los diagramas iniciales para la construcción del proyecto.
 
 ## División de trabajo
 - **Irad Canché**: Apoyo en todas las áreas.
@@ -24,5 +25,6 @@ Nuestro objetivo es crear y desarrollar un sistema de gestión de cafetería, el
 - **Juan Vargas**: Requerimientos funcionales y diagrama de casos de uso.
   
 
-**Etapa 2** (Segunda entrega final): Se entregaran ya los diagramas totalmente corregidos y el sistema funcional.
+## Etapa 2 (Segunda entrega final)
+Se entregaran ya los diagramas totalmente corregidos y el sistema funcional.
 
