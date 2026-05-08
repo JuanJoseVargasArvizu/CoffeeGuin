@@ -1,7 +1,6 @@
 # Sistema Gestión de cafetería Equipo#2
 
 ## Integrantes
-- Irad Francisco Canché Galván
 - Victor Manuel González Nahuat
 - Edrei Enrique Lizama Solís
 - Wimon Rafael Solis Chen
@@ -18,7 +17,6 @@ Nuestro objetivo es crear y desarrollar un sistema de gestión de cafetería, el
 Se entregaron los diagramas iniciales para la construcción del proyecto.
 
 ### División de trabajo
-- **Irad Canché**: Apoyo en todas las áreas.
 - **Victor González**: Aplicación de los principios de SOLID en el diagrama de clases y creador del repositorio d GitHub.
 - **Edrei Lizama**: Diagrama de actividad y Diagrama de secuencia.
 - **Wimon Solis**: Diagrama de clases con la implementación de 2 patrones de diseño y ordenamiento del repositorio
