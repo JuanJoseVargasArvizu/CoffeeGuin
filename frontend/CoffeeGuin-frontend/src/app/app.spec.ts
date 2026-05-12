@@ -1,23 +1,21 @@
 import { TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
+      imports: [App, RouterTestingModule]
     }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it('should create the app and render sidebar', () => {
     const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
+    fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, CoffeeGuin-frontend');
+    expect(compiled.textContent).toContain('CoffeeGuin');
+    expect(compiled.textContent).toContain('Pedido');
+    expect(compiled.textContent).toContain('Inventario');
+    expect(compiled.textContent).toContain('Reportes');
   });
 });

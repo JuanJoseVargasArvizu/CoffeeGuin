@@ -1,0 +1,15 @@
+<h1>Pedido</h1>
+<p>Menu (categorías y productos)</p>
+
+<div *ngIf="error" class="error">{{ error }}</div>
+
+<section *ngIf="categorias.length > 0">
+	<article *ngFor="let c of categorias" class="category">
+		<h3>{{ c.nombre }}</h3>
+		<ul>
+			<li *ngFor="let p of c.productos">{{ p.nombre }} <span *ngIf="p.precio"> - $ {{ p.precio }}</span></li>
+		</ul>
+	</article>
+</section>
+
+<p *ngIf="!error && categorias.length === 0">No hay categorias en el menu.</p>

@@ -1,0 +1,5 @@
+.panel{border:1px solid #eee;padding:12px;margin-bottom:12px}
+.list{display:grid;gap:8px}
+.row{display:flex;justify-content:space-between}
+.form-inline{display:flex;gap:8px;margin-top:8px}
+.form{display:grid;gap:8px;margin-top:8px}

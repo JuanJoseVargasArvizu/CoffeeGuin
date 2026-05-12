@@ -1,0 +1,57 @@
+<h1>Inventario</h1>
+
+<section class="panel">
+	<h2>Categorías</h2>
+	<div class="list">
+		<div *ngFor="let c of categorias" class="row">
+			<div>{{ c.nombre }}</div>
+			<div>
+				<button (click)="startEditCategoria(c)">Editar</button>
+				<button (click)="delCategoria(c)">Eliminar</button>
+			</div>
+		</div>
+	</div>
+
+	<form (ngSubmit)="saveCategoria()" class="form-inline">
+		<input [(ngModel)]="categoriaForm.nombre" name="nombre" placeholder="Nueva categoría" required />
+		<button type="submit">Guardar</button>
+		<button type="button" *ngIf="categoriaForm.id" (click)="cancelCategoria()">Cancelar</button>
+	</form>
+</section>
+
+<section class="panel">
+	<h2>Productos</h2>
+	<div class="list">
+		<div *ngFor="let p of productos" class="row">
+			<div>
+				<strong>{{ p.nombre }}</strong>
+				<div>Tipo: {{ p.tipo }} - Categoria: {{ p.categoria?.nombre || p.categoria }}</div>
+			</div>
+			<div>
+				<button (click)="startEditProducto(p)">Editar</button>
+				<button (click)="delProducto(p)">Eliminar</button>
+			</div>
+		</div>
+	</div>
+
+	<form (ngSubmit)="saveProducto()" class="form">
+		<input [(ngModel)]="productoForm.nombre" name="nombre" placeholder="Nombre" required />
+		<input type="number" [(ngModel)]="productoForm.precio" name="precio" placeholder="Precio" />
+		<select [(ngModel)]="productoForm.tipo" name="tipo">
+			<option value="bebida">bebida</option>
+			<option value="alimento">alimento</option>
+			<option value="ingrediente">ingrediente</option>
+		</select>
+		<select [(ngModel)]="productoForm.categoriaId" name="categoriaId">
+			<option [ngValue]="null">Sin categoría</option>
+			<option *ngFor="let c of categorias" [ngValue]="c.id">{{ c.nombre }}</option>
+		</select>
+		<input type="number" [(ngModel)]="productoForm.stockActual" name="stockActual" placeholder="Stock" />
+		<input type="number" [(ngModel)]="productoForm.umbralAlerta" name="umbralAlerta" placeholder="Umbral" />
+
+		<div>
+			<button type="submit">Guardar producto</button>
+			<button type="button" *ngIf="productoForm.id" (click)="cancelProducto()">Cancelar</button>
+		</div>
+	</form>
+</section>
