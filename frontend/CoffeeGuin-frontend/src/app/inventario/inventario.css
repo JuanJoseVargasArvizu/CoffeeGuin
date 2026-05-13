@@ -63,9 +63,6 @@
 	.card-actions .small{flex:1 1 45%}
 }
 
-/* Discount badge */
-.discount-badge{margin-top:8px;display:inline-block;padding:6px 10px;background:#ecfdf5;color:#065f46;border-radius:10px;font-weight:700;font-size:13px}
-
 /* Estrategia modal tweaks */
 .modal .field input[type="number"]{max-width:160px}
 /* Assign modal list */
@@ -96,3 +93,10 @@
 @media (max-width:520px){
 	.modal{width:92%;padding:12px}
 }
+
+
+/* Colores para las mesas */
+.item-card.mesa-libre { border-left: 5px solid #22c55e; }
+.item-card.mesa-ocupada { border-left: 5px solid #ef4444; background: #fff5f5; }
+.item-card.mesa-sucia { border-left: 5px solid #eab308; background: #fffbeb; }
+.item-card.mesa-reservada { border-left: 5px solid #3b82f6; }

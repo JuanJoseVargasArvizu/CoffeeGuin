@@ -3,74 +3,181 @@
 <div *ngIf="error" class="error">{{ error }}</div>
 
 <div class="pedido-layout">
-	<div class="pedido-main">
-		<section class="categories-section" *ngIf="categorias.length > 0">
-			<h2>Categorías</h2>
-			<div class="grid">
-				<button 
-					*ngFor="let c of categorias" 
-					class="category-btn"
-					[class.active]="selectedCategoryId === c.id"
-					(click)="selectCategory(c.id!)">
-					<!-- geometric icon per category -->
-					<ng-container [ngSwitch]="c.icon">
-						<svg *ngSwitchCase="'circle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
-						<svg *ngSwitchCase="'square'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
-						<svg *ngSwitchCase="'triangle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,5 19,19 5,19" fill="currentColor"/></svg>
-						<svg *ngSwitchCase="'hexagon'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,4 18,7 18,13 12,16 6,13 6,7" fill="currentColor"/></svg>
-						<svg *ngSwitchDefault class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
-					</ng-container>
-					<div class="btn-label">{{ c.nombre }}</div>
-				</button>
-			</div>
-		</section>
+    <div class="pedido-main">
+        <section class="categories-section" *ngIf="categorias.length > 0">
+            <h2>Categorías</h2>
+            <div class="grid">
+                <button 
+                    *ngFor="let c of categorias" 
+                    class="category-btn"
+                    [class.active]="selectedCategoryId === c.id"
+                    (click)="selectCategory(c.id!)">
+                    <!-- geometric icon per category -->
+                    <ng-container [ngSwitch]="c.icon">
+                        <svg *ngSwitchCase="'circle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
+                        <svg *ngSwitchCase="'square'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+                        <svg *ngSwitchCase="'triangle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,5 19,19 5,19" fill="currentColor"/></svg>
+                        <svg *ngSwitchCase="'hexagon'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,4 18,7 18,13 12,16 6,13 6,7" fill="currentColor"/></svg>
+                        <svg *ngSwitchDefault class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
+                    </ng-container>
+                    <div class="btn-label">{{ c.nombre }}</div>
+                </button>
+            </div>
+        </section>
 
-		<section class="products-section" *ngIf="selectedCategoryId !== null">
-			<h2>Productos</h2>
-			<div *ngIf="loadingProductos" class="loading">Cargando productos...</div>
-			<div class="grid" *ngIf="!loadingProductos && productos.length > 0">
-				<div *ngFor="let p of productos" class="product-card" [class.unavailable]="p.disponible === false">
-					<div class="product-main">
-						<div class="product-top">
-							<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
-								<path fill="currentColor" d="M2,21H20V19H2V21M20,8H18V5H20V8M20,8V10A2,2 0 0,1 18,12H16V13A2,2 0 0,1 14,15H6A2,2 0 0,1 4,13V5H16V3H2V13A4,4 0 0,0 6,17H14A4,4 0 0,0 18,13V12H20A2,2 0 0,0 22,10V8A2,2 0 0,0 20,8M9,2V4H11V2H9M13,2V4H15V2H13M5,2V4H7V2H5Z" />
-							</svg>
-							<div>
-								<div class="product-name">{{ p.nombre }}</div>
-								<div class="product-price" *ngIf="p.precio">$ {{ p.precio }}</div>
-								<div *ngIf="p.disponible === false" class="unavailable-badge">No disponible</div>
-							</div>
-						</div>
-					</div>
-					<button class="add-btn" title="Agregar" (click)="addToOrder(p)" [disabled]="p.disponible === false" [class.disabled]="p.disponible === false">+</button>
-				</div>
-			</div>
-			<p *ngIf="!loadingProductos && productos.length === 0" class="no-products">No hay productos en esta categoría.</p>
-		</section>
-	</div>
+        <section class="products-section" *ngIf="selectedCategoryId !== null">
+            <h2>Productos</h2>
+            <div *ngIf="loadingProductos" class="loading">Cargando productos...</div>
+            <div class="grid" *ngIf="!loadingProductos && productos.length > 0">
+                <div *ngFor="let p of productos" class="product-card" [class.unavailable]="p.disponible === false">
+                    <div class="product-main">
+                        <div class="product-top">
+                            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fill="currentColor" d="M2,21H20V19H2V21M20,8H18V5H20V8M20,8V10A2,2 0 0,1 18,12H16V13A2,2 0 0,1 14,15H6A2,2 0 0,1 4,13V5H16V3H2V13A4,4 0 0,0 6,17H14A4,4 0 0,0 18,13V12H20A2,2 0 0,0 22,10V8A2,2 0 0,0 20,8M9,2V4H11V2H9M13,2V4H15V2H13M5,2V4H7V2H5Z" />
+                            </svg>
+                            <div>
+                                <div class="product-name">{{ p.nombre }}</div>
+                                <div class="product-price" *ngIf="p.precio">$ {{ p.precio }}</div>
+                                <div *ngIf="p.disponible === false" class="unavailable-badge">No disponible</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="add-btn" title="Agregar" (click)="addToOrder(p)" [disabled]="p.disponible === false" [class.disabled]="p.disponible === false">+</button>
+                </div>
+            </div>
+            <p *ngIf="!loadingProductos && productos.length === 0" class="no-products">No hay productos en esta categoría.</p>
+        </section>
+    </div>
 
-	<aside class="pedido-sidebar">
-		<h3>Pedido actual</h3>
-		<div *ngIf="pedidoActual.length === 0" class="empty">No hay productos añadidos.</div>
-		<ul class="order-list" *ngIf="pedidoActual.length > 0">
-			<li *ngFor="let item of pedidoActual; let i = index" class="order-item"
-					[style.transform]="'translate(' + (i * 6) + 'px,' + (i * 4) + 'px)'"
-					[style.zIndex]="1000 - i">
-				<div class="order-item-left">
-					<div class="order-name">{{ item.producto.nombre }}</div>
-					<div class="order-qty">Cantidad: {{ item.cantidad }}</div>
-				</div>
-				<div class="order-item-right">
-					<div class="order-sub">$ {{ (item.producto.precio ?? 0) * item.cantidad }}</div>
-					<button class="small" (click)="removeFromOrder(item.producto)">-</button>
-				</div>
-			</li>
-		</ul>
-		<div class="order-total" *ngIf="pedidoActual.length > 0">
-			<div>Total</div>
-			<div class="total-amount">$ {{ total }}</div>
-		</div>
-	</aside>
+    <aside class="pedido-sidebar">
+        <h3>Pedido actual</h3>
+        <div *ngIf="pedidoActual.length === 0" class="empty">No hay productos añadidos.</div>
+        <ul class="order-list" *ngIf="pedidoActual.length > 0">
+            <li *ngFor="let item of pedidoActual; let i = index" class="order-item"
+                    [style.transform]="'translate(' + (i * 6) + 'px,' + (i * 4) + 'px)'"
+                    [style.zIndex]="1000 - i">
+                <div class="order-item-left">
+                    <div class="order-name">{{ item.producto.nombre }}</div>
+                    <div class="order-qty">Cantidad: {{ item.cantidad }}</div>
+                </div>
+                <div class="order-item-right">
+                    <div class="order-sub">$ {{ (item.producto.precio ?? 0) * item.cantidad }}</div>
+                    <button class="small" (click)="removeFromOrder(item.producto)">-</button>
+                </div>
+            </li>
+        </ul>
+        <div class="order-total" *ngIf="pedidoActual.length > 0">
+            <div>Total</div>
+            <div class="total-amount">$ {{ total }}</div>
+        </div>
+
+        <!-- BOTÓN DE FINALIZAR COMPRA -->
+        <button class="checkout-btn" 
+                *ngIf="pedidoActual.length > 0" 
+                (click)="openCheckout()">
+            Finalizar Compra
+        </button>
+    </aside>
 </div>
 
 <p *ngIf="!error && categorias.length === 0">No hay categorias en el menu.</p>
+
+<!-- MODAL DE CHECKOUT -->
+<div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content">
+        <h3>Finalizar Compra</h3>
+        <hr>
+        
+        <div class="form-group">
+            <label>Seleccionar Cliente (Opcional):</label>
+            <select [(ngModel)]="selectedClientId" (change)="onClientChange()" class="select-cliente">
+                <option [ngValue]="null">-- Consumidor Final --</option>
+                <option *ngFor="let c of clientes" [value]="c.id">
+                    {{ c.nombre }} ({{ c.email }})
+                </option>
+            </select>
+        </div>
+
+        <div class="resumen-pago">
+            <div class="resumen-row">
+                <span>Total Original:</span>
+                <span>$ {{ total }}</span>
+            </div>
+            
+            <!-- Bloque si hay descuento -->
+            <div *ngIf="calculoDescuento" class="descuento-info">
+                <div class="resumen-row text-discount">
+                    <span>Descuento aplicado:</span>
+                    <span>- $ {{ calculoDescuento.montoDescuento }}</span>
+                </div>
+                <div class="resumen-row total-final">
+                    <span>Total a Pagar:</span>
+                    <span>$ {{ calculoDescuento.totalConDescuento }}</span>
+                </div>
+            </div>
+
+            <!-- Bloque si no hay descuento (Consumidor final) -->
+            <div *ngIf="!calculoDescuento" class="resumen-row total-final">
+                <span>Total a Pagar:</span>
+                <span>$ {{ total }}</span>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" (click)="closeModal()">Cancelar</button>
+            <button class="btn-confirm" (click)="confirmarPedido()">Confirmar y Pagar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showTicket">
+    <div class="ticket-container">
+        <div class="ticket-header">
+            <div class="logo-circle">☕</div>
+            <h2>CoffeeGuin</h2>
+            <p>Ticket de Venta #{{ ventaExitosa?.id }}</p>
+            <p class="ticket-date">{{ ventaExitosa?.fecha | date:'short' }}</p>
+        </div>
+        
+        <div class="ticket-body">
+            <div class="ticket-info">
+                <span>Mesa: {{ ventaExitosa?.mesa?.id }}</span>
+                <span>Atendido por: Sistema</span>
+            </div>
+            <div class="ticket-info" *ngIf="ventaExitosa?.cliente">
+                <span>Cliente: {{ ventaExitosa.cliente.nombre }}</span>
+            </div>
+            
+            <hr class="ticket-divider">
+            
+            <div class="ticket-items">
+                <div *ngFor="let p of pedidoActualBackup" class="ticket-item">
+                    <span>{{ p.cantidad }}x {{ p.producto.nombre }}</span>
+                    <span>$ {{ (p.producto.precio ?? 0) * p.cantidad }}</span>
+                </div>
+            </div>
+            
+            <hr class="ticket-divider">
+            
+            <div class="ticket-totals">
+                <div class="t-row">
+                    <span>Subtotal:</span>
+                    <span>$ {{ ventaExitosa?.subtotalCalculado }}</span>
+                </div>
+                <div class="t-row discount" *ngIf="ventaExitosa?.subtotalCalculado > ventaExitosa?.totalFinal">
+                    <span>Descuento:</span>
+                    <span>- $ {{ (ventaExitosa?.subtotalCalculado - ventaExitosa?.totalFinal).toFixed(2) }}</span>
+                </div>
+                <div class="t-row total">
+                    <span>TOTAL:</span>
+                    <span>$ {{ ventaExitosa?.totalFinal }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="ticket-footer">
+            <p>¡Gracias por su compra!</p>
+            <button class="btn-print" (click)="cerrarRecibo()">Cerrar</button>
+        </div>
+    </div>
+</div>

@@ -3,7 +3,7 @@ package com.diep.coffeeguin_backend.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "asientos")
+@Table(name = "asiento")
 public class Asiento {
 
     @Id

@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-pedido',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './pedido.html',
   styleUrl: './pedido.css',
 })
@@ -18,6 +19,94 @@ export class PedidoComponent implements OnInit {
   error = '';
   loadingProductos = false;
   pedidoActual: Array<{ producto: Producto; cantidad: number }> = [];
+  showModal = false;
+  clientes: any[] = [];
+  selectedClientId: number | null = null;
+  calculoDescuento: any = null;
+  showTicket = false;
+  ventaExitosa: any = null; // Guardará la respuesta del servidor para el recibo
+  pedidoActualBackup: Array<{ producto: Producto; cantidad: number }> = []; 
+
+  confirmarPedido(): void {
+    if (this.pedidoActual.length === 0) return;
+
+    // 1. Preparar la lista de productos (aplanar por cantidad)
+    const listaProductos: any[] = [];
+    this.pedidoActual.forEach(item => {
+      for (let i = 0; i < item.cantidad; i++) {
+        listaProductos.push({
+          id: item.producto.id,
+          nombre: item.producto.nombre,
+          precio: item.producto.precio
+        });
+      }
+    });
+
+    // 2. Buscar datos del cliente seleccionado si existe
+    const clienteSeleccionado = this.clientes.find(c => c.id == this.selectedClientId);
+
+    // 3. Construir el objeto Venta
+    const nuevaVenta = {
+      fecha: new Date().toISOString(),
+      subtotalCalculado: this.total,
+      totalFinal: this.calculoDescuento ? this.calculoDescuento.totalConDescuento : this.total,
+      productos: listaProductos,
+      cliente: clienteSeleccionado ? { id: clienteSeleccionado.id, nombre: clienteSeleccionado.nombre } : null,
+      mesa: { id: 1, estado: "Ocupada" } // Mesa hardcodeada
+    };
+
+    // 4. Enviar al servidor
+    this.http.post<any>(`${environment.apiUrl}/ventas`, nuevaVenta).subscribe({
+      next: (res) => {
+        this.ventaExitosa = res;
+        this.showModal = false; // Cierra el formulario de cliente
+        this.showTicket = true; // Abre el recibo virtual
+        this.pedidoActual = []; // Limpia el carrito
+      },
+      error: (err) => {
+        console.error('Error al registrar venta', err);
+        alert('Hubo un error al procesar la venta');
+      }
+    });
+  }
+
+  cerrarRecibo(): void {
+    this.showTicket = false;
+    this.ventaExitosa = null;
+    this.selectedClientId = null;
+    this.calculoDescuento = null;
+  }
+  
+
+  openCheckout(): void {
+    if (this.pedidoActual.length === 0) return;
+    this.showModal = true;
+    this.http.get<any[]>(`${environment.apiUrl}/clientes`).subscribe({
+      next: (res) => this.clientes = res.filter(c => c.activo),
+      error: () => console.error('Error cargando clientes')
+    });
+  }
+
+  onClientChange(): void {
+    if (!this.selectedClientId) {
+      this.calculoDescuento = null;
+      return;
+    }
+
+    const currentTotal = this.total;
+    this.http.get<any>(`${environment.apiUrl}/clientes/${this.selectedClientId}/precio-descuento?total=${currentTotal}`)
+      .subscribe({
+        next: (res) => this.calculoDescuento = res,
+        error: () => this.calculoDescuento = null
+      });
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.selectedClientId = null;
+    this.calculoDescuento = null;
+  }
+
 
   ngOnInit(): void {
     this.loadMenu();

@@ -27,7 +27,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 
 	@Override
 	public void agregar(EstrategiaDescuento estrategia) {
-		String sql = "INSERT INTO estrategias_descuento (nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+		String sql = "INSERT INTO estrategia_descuento (nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			
@@ -65,7 +65,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 			throw new IllegalArgumentException("La estrategia debe tener id para eliminarse");
 		}
 		
-		String sql = "DELETE FROM estrategias_descuento WHERE id = ?";
+		String sql = "DELETE FROM estrategia_descuento WHERE id = ?";
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setInt(1, estrategia.getId());
@@ -79,7 +79,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 
 	@Override
 	public EstrategiaDescuento buscarPorId(int id) {
-		String sql = "SELECT id, nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa FROM estrategias_descuento WHERE id = ?";
+		String sql = "SELECT id, nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa FROM estrategia_descuento WHERE id = ?";
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setInt(1, id);
@@ -96,7 +96,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 
 	@Override
 	public List<EstrategiaDescuento> listarTodas() {
-		String sql = "SELECT id, nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa FROM estrategias_descuento ORDER BY id";
+		String sql = "SELECT id, nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa FROM estrategia_descuento ORDER BY id";
 		List<EstrategiaDescuento> estrategias = new ArrayList<>();
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql);
@@ -112,7 +112,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 
 	@Override
 	public List<EstrategiaDescuento> listarActivas() {
-		String sql = "SELECT id, nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa FROM estrategias_descuento WHERE activa = true ORDER BY id";
+		String sql = "SELECT id, nombre, descripcion, tipo_estrategia, porcentaje, monto_fijo, activa FROM estrategia_descuento WHERE activa = true ORDER BY id";
 		List<EstrategiaDescuento> estrategias = new ArrayList<>();
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql);
@@ -132,7 +132,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 			throw new IllegalArgumentException("La estrategia debe tener id para actualizarse");
 		}
 		
-		String sql = "UPDATE estrategias_descuento SET nombre = ?, descripcion = ?, porcentaje = ?, monto_fijo = ?, activa = ? WHERE id = ?";
+		String sql = "UPDATE estrategia_descuento SET nombre = ?, descripcion = ?, porcentaje = ?, monto_fijo = ?, activa = ? WHERE id = ?";
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			
@@ -164,7 +164,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 
 	@Override
 	public List<DescuentoPorcentaje> listarPorcentajes() {
-		String sql = "SELECT id, nombre, descripcion, porcentaje, activa FROM estrategias_descuento WHERE tipo_estrategia = 'PORCENTAJE' ORDER BY id";
+		String sql = "SELECT id, nombre, descripcion, porcentaje, activa FROM estrategia_descuento WHERE tipo_estrategia = 'PORCENTAJE' ORDER BY id";
 		List<DescuentoPorcentaje> estrategias = new ArrayList<>();
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql);
@@ -186,7 +186,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 
 	@Override
 	public List<DescuentoFijo> listarFijos() {
-		String sql = "SELECT id, nombre, descripcion, monto_fijo, activa FROM estrategias_descuento WHERE tipo_estrategia = 'FIJO' ORDER BY id";
+		String sql = "SELECT id, nombre, descripcion, monto_fijo, activa FROM estrategia_descuento WHERE tipo_estrategia = 'FIJO' ORDER BY id";
 		List<DescuentoFijo> estrategias = new ArrayList<>();
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql);
@@ -235,7 +235,7 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 	}
 
 	private void crearTablaSiNoExiste() {
-		String sql = "CREATE TABLE IF NOT EXISTS estrategias_descuento (" +
+		String sql = "CREATE TABLE IF NOT EXISTS estrategia_descuento (" +
 				"id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, " +
 				"nombre VARCHAR(100) NOT NULL, " +
 				"descripcion TEXT, " +
@@ -247,8 +247,8 @@ public class EstrategiaDescuentoDAOImpl implements EstrategiaDescuentoDAO {
 		try (Connection connection = dbConnection.getConnection();
 			 Statement statement = connection.createStatement()) {
 			statement.execute(sql);
-			statement.execute("ALTER TABLE estrategias_descuento ALTER COLUMN porcentaje DROP NOT NULL");
-			statement.execute("ALTER TABLE estrategias_descuento ALTER COLUMN monto_fijo DROP NOT NULL");
+			statement.execute("ALTER TABLE estrategia_descuento ALTER COLUMN porcentaje DROP NOT NULL");
+			statement.execute("ALTER TABLE estrategia_descuento ALTER COLUMN monto_fijo DROP NOT NULL");
 		} catch (SQLException exception) {
 			throw new IllegalStateException("No se pudo preparar la tabla de estrategias_descuento", exception);
 		}

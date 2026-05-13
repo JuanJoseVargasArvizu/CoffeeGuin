@@ -56,10 +56,6 @@
 				<div>
 					<div class="item-name">{{ c.nombre }}</div>
 					<div class="item-meta">{{ c.email || '-' }} · {{ c.telefono || '-' }}</div>
-					<div *ngIf="c.estrategia || c.estrategiaId" class="discount-badge">
-						<span *ngIf="c.estrategia">Descuento: {{ c.estrategia.nombre }} · {{ c.estrategia.porcentaje }}%</span>
-						<span *ngIf="!c.estrategia">Tiene descuento</span>
-					</div>
 				</div>
 			</div>
 
@@ -90,6 +86,53 @@
 		</div>
 	</div>
 </section>
+
+<section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Mesas</h2>
+        <button class="action-btn" (click)="openMesaModal(true)">Agregar mesa</button>
+    </div>
+
+    <div class="grid">
+        <div *ngFor="let m of mesas" class="item-card" [ngClass]="'mesa-' + m.estado.toLowerCase()">
+            <div class="item-top">
+                <div>
+                    <div class="item-name">Mesa #{{ m.id }}</div>
+                    <div class="item-meta">Estado: {{ m.estado }}</div>
+                </div>
+            </div>
+            <div style="margin-top:12px">
+                <button type="button" class="small edit-btn" (click)="startEditMesa(m)">Cambiar Estado</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal-overlay" *ngIf="showMesaModal" (click)="closeMesaModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header"><h3>{{ mesaForm.id ? 'Actualizar Estado' : 'Nueva Mesa' }}</h3></div>
+        <form (ngSubmit)="saveMesa()">
+            <div class="field" *ngIf="!mesaForm.id">
+                <p>Se creará una nueva mesa con estado inicial "Libre".</p>
+            </div>
+            
+            <div class="field" *ngIf="mesaForm.id">
+                <label>Estado de la mesa</label>
+                <select class="search" [(ngModel)]="mesaForm.estado" name="estado">
+                    <option value="Libre">Libre</option>
+                    <option value="Ocupada">Ocupada</option>
+                    <option value="Sucia">Sucia</option>
+                    <option value="Reservada">Reservada</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="action-btn">Guardar</button>
+                <button type="button" class="small" (click)="closeMesaModal()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 		<!-- Estrategia Create Modal -->
 		<div class="modal-overlay" *ngIf="showEstrategiaModal" (click)="closeEstrategiaModal()">

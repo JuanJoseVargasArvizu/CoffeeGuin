@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CategoriaService, Categoria } from '../services/categoria.service';
 import { ProductoService, Producto } from '../services/producto.service';
 import { ClienteService, Cliente } from '../services/cliente.service';
+import { MesaService, Mesa } from '../services/mesa.service';
 
 @Component({
   selector: 'app-inventario',
@@ -16,11 +17,15 @@ export class InventarioComponent implements OnInit {
   private categoriaService = inject(CategoriaService);
   private productoService = inject(ProductoService);
   private clienteService = inject(ClienteService);
+  private mesaService = inject(MesaService); 
 
   categorias: Categoria[] = [];
   productos: Producto[] = [];
   ingredientes: any[] = [];
   clientes: Cliente[] = [];
+  mesas: Mesa[] = [];
+  showMesaModal = false;
+  mesaForm: any = { estado: 'Libre' };
 
   categoriaForm: any = { nombre: '' };
   productoForm: any = { nombre: '', precio: 0, tipo: null, categoriaId: null, stockActual: 0, umbralAlerta: 0, ingredienteIds: [] };
@@ -46,6 +51,7 @@ export class InventarioComponent implements OnInit {
     this.productoService.list().subscribe({ next: (v: any) => (this.productos = v || []), error: () => (this.productos = []) });
     this.productoService.listIngredientes().subscribe({ next: (v: any) => (this.ingredientes = v || []), error: () => (this.ingredientes = []) });
     this.clienteService.list().subscribe({ next: (v: any) => (this.clientes = v || []), error: () => (this.clientes = []) });
+    this.mesaService.list().subscribe({ next: (v) => (this.mesas = v || []), error: () => (this.mesas = []) });
     this.loadEstrategias();
   }
 
@@ -53,6 +59,32 @@ export class InventarioComponent implements OnInit {
 
   startEditCategoria(c: Categoria) { this.categoriaForm = { ...c }; this.openCategoriaModal(); }
   cancelCategoria() { this.categoriaForm = { nombre: '' }; this.closeCategoriaModal(); }
+
+  // Métodos para Mesas
+  openMesaModal(newOne = false) {
+    if (newOne) this.mesaForm = { estado: 'Libre' };
+    this.showMesaModal = true;
+  }
+
+  closeMesaModal() {
+    this.showMesaModal = false;
+    this.mesaForm = { estado: 'Libre' };
+  }
+
+  saveMesa() {
+    // El controlador solo tiene POST para crear y PUT para estado
+    if (this.mesaForm.id) {
+        this.mesaService.actualizarEstado(this.mesaForm.id, this.mesaForm.estado).subscribe(() => this.loadAll());
+    } else {
+        this.mesaService.create(this.mesaForm).subscribe(() => this.loadAll());
+    }
+    this.closeMesaModal();
+  }
+
+  startEditMesa(m: Mesa) {
+    this.mesaForm = { ...m };
+    this.showMesaModal = true;
+  }
 
   openCategoriaModal(newOne = false) {
     if (newOne) this.categoriaForm = { nombre: '' };

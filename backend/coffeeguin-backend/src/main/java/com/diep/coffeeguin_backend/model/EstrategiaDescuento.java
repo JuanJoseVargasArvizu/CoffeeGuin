@@ -3,7 +3,7 @@ package com.diep.coffeeguin_backend.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "estrategias_descuento")
+@Table(name = "estrategia_descuento")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tipo_estrategia", discriminatorType = DiscriminatorType.STRING)
 public abstract class EstrategiaDescuento {

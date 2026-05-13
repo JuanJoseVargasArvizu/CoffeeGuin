@@ -15,7 +15,7 @@ import java.util.List;
 })
 
 @Entity 
-@Table(name = "productos")
+@Table(name = "producto")
 @Inheritance(strategy = InheritanceType.JOINED)
 
 public abstract class Producto {
