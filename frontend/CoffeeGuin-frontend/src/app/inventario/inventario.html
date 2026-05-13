@@ -36,12 +36,163 @@
 			</div>
 
 			<div style="margin-top:8px;display:flex;justify-content:flex-end;gap:8px">
-					<button type="button" class="small edit-btn" (click)="startEditProducto(p)">Editar</button>
-					<button type="button" class="small danger-btn" (click)="delProducto(p)">Eliminar</button>
+				<button type="button" class="small edit-btn" (click)="startEditProducto(p)">Editar</button>
+				<button type="button" class="small danger-btn" (click)="delProducto(p)">Eliminar</button>
+			</div>
+		</div>
+	</div>
+
+	</section>
+
+	<section class="panel">
+	<div style="display:flex;justify-content:space-between;align-items:center">
+		<h2>Clientes</h2>
+		<button class="action-btn" (click)="openClienteModal(true)">Agregar cliente</button>
+	</div>
+
+	<div class="grid">
+		<div *ngFor="let c of clientes" class="item-card cliente-card">
+			<div class="item-top">
+				<div>
+					<div class="item-name">{{ c.nombre }}</div>
+					<div class="item-meta">{{ c.email || '-' }} · {{ c.telefono || '-' }}</div>
+					<div *ngIf="c.estrategia || c.estrategiaId" class="discount-badge">
+						<span *ngIf="c.estrategia">Descuento: {{ c.estrategia.nombre }} · {{ c.estrategia.porcentaje }}%</span>
+						<span *ngIf="!c.estrategia">Tiene descuento</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="card-actions">
+				<button type="button" class="small edit-btn" (click)="startEditCliente(c)">Editar</button>
+				<button type="button" class="small" (click)="openAssignModal(c)">Asignar descuento</button>
+				<button type="button" class="small danger-btn" (click)="delCliente(c)">Eliminar</button>
 			</div>
 		</div>
 	</div>
 </section>
+
+<!-- Tipos de descuento -->
+<section class="panel">
+	<div style="display:flex;justify-content:space-between;align-items:center">
+		<h2>Tipos de descuento</h2>
+		<button class="action-btn" (click)="openCreateEstrategiaModal()">Agregar descuento</button>
+	</div>
+
+	<div class="grid">
+		<div *ngFor="let e of estrategias" class="item-card">
+			<div class="item-top">
+				<div>
+					<div class="item-name">{{ e.nombre }}</div>
+					<div class="item-meta">{{ e.descripcion || '-' }} · {{ e.porcentaje }}%</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+		<!-- Estrategia Create Modal -->
+		<div class="modal-overlay" *ngIf="showEstrategiaModal" (click)="closeEstrategiaModal()">
+			<div class="modal" (click)="$event.stopPropagation()">
+				<div class="modal-header"><h3>Crear estrategia</h3></div>
+				<form (ngSubmit)="saveEstrategia()">
+					<div class="field">
+						<label>Nombre</label>
+						<input class="search" [(ngModel)]="estrategiaForm.nombre" name="estr_nombre" placeholder="Nombre estrategia" required />
+					</div>
+					<div class="field">
+						<label>Descripción</label>
+						<input class="search" [(ngModel)]="estrategiaForm.descripcion" name="estr_descripcion" placeholder="Descripción" />
+					</div>
+					<div class="field">
+						<label>Porcentaje</label>
+						<input class="search" type="number" [(ngModel)]="estrategiaForm.porcentaje" name="estr_porcentaje" placeholder="10.0" required />
+					</div>
+					<div class="modal-actions">
+						<button type="submit" class="action-btn">Crear</button>
+						<button type="button" class="small" (click)="closeEstrategiaModal()">Cancelar</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Assign Estrategia Modal -->
+		<div class="modal-overlay" *ngIf="showAssignModal" (click)="closeAssignModal()">
+			<div class="modal" (click)="$event.stopPropagation()">
+				<div class="modal-header"><h3>Asignar descuento a {{ selectedClientForAssign?.nombre }}</h3></div>
+				<div style="max-height:320px;overflow:auto">
+					<div *ngFor="let e of estrategias" style="padding:8px;border-bottom:1px solid #f1f1f1;display:flex;justify-content:space-between;align-items:center">
+						<div>
+							<div style="font-weight:700">{{ e.nombre }}</div>
+							<div style="font-size:13px;color:#666">{{ e.descripcion || '-' }} · {{ e.porcentaje }}%</div>
+						</div>
+						<div style="display:flex;gap:8px">
+							<button type="button" class="action-btn" (click)="assignEstrategiaToClient(e)">Asignar</button>
+						</div>
+					</div>
+					<p *ngIf="estrategias.length === 0" style="padding:12px">No hay estrategias disponibles.</p>
+				</div>
+				<div class="modal-actions">
+					<button type="button" class="small" (click)="openCreateEstrategiaModal();">Crear nueva</button>
+					<button type="button" class="small" (click)="closeAssignModal()">Cerrar</button>
+				</div>
+			</div>
+		</div>
+
+<!-- Cliente Modal -->
+<div class="modal-overlay" *ngIf="showClienteModal" (click)="closeClienteModal()">
+	<div class="modal" (click)="$event.stopPropagation()">
+		<div class="modal-header"><h3>{{ clienteForm.id ? 'Editar cliente' : 'Agregar cliente' }}</h3></div>
+		<form (ngSubmit)="saveCliente()">
+			<div class="field">
+				<label>Nombre</label>
+				<input class="search" [(ngModel)]="clienteForm.nombre" name="nombre" placeholder="Nombre" required />
+			</div>
+
+			<div class="field">
+				<label>Email</label>
+				<input class="search" type="email" [(ngModel)]="clienteForm.email" name="email" placeholder="email@ejemplo.com" />
+			</div>
+
+			<div class="field">
+				<label>Teléfono</label>
+				<input class="search" [(ngModel)]="clienteForm.telefono" name="telefono" placeholder="Teléfono" />
+			</div>
+
+			<div class="field">
+				<label>Dirección</label>
+				<input class="search" [(ngModel)]="clienteForm.direccion" name="direccion" placeholder="Dirección" />
+			</div>
+
+			<div class="field">
+				<label>Preferencias</label>
+				<input class="search" [(ngModel)]="clienteForm.preferencias" name="preferencias" placeholder="Preferencias" />
+			</div>
+
+			<div class="field">
+				<label>Alergias</label>
+				<input class="search" [(ngModel)]="clienteForm.alergias" name="alergias" placeholder="Alergias" />
+			</div>
+
+			<div class="field">
+				<label>Bebida favorita</label>
+				<input class="search" [(ngModel)]="clienteForm.bebidaFavorita" name="bebidaFavorita" placeholder="Bebida favorita" />
+			</div>
+
+			<div class="field">
+				<label>Plato favorito</label>
+				<input class="search" [(ngModel)]="clienteForm.platoFavorito" name="platoFavorito" placeholder="Plato favorito" />
+			</div>
+
+			<div class="modal-actions">
+				<button type="submit" class="action-btn">Guardar</button>
+				<button type="button" class="small" (click)="closeClienteModal()">Cancelar</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+
 
 <!-- Categoria Modal -->
 <div class="modal-overlay" *ngIf="showCategoriaModal" (click)="closeCategoriaModal()">

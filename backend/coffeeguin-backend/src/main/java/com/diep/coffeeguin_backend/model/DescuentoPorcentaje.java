@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @DiscriminatorValue("PORCENTAJE")
 public class DescuentoPorcentaje extends EstrategiaDescuento {
     
-    @Column(nullable = false)
+    @Column
     private Double porcentaje;
     
     // Constructores
