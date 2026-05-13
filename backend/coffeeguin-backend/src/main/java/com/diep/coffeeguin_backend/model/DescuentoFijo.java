@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @DiscriminatorValue("FIJO")
 public class DescuentoFijo extends EstrategiaDescuento {
     
-    @Column(nullable = false)
+    @Column
     private Double montoFijo;
     
     // Constructores

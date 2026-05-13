@@ -2,10 +2,10 @@
 .list{display:grid;gap:12px}
 
 /* Grid of inventory items */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:12px}
 
 /* Item card */
-.item-card{display:flex;flex-direction:column;padding:12px;border:1px solid #e6e2dc;border-radius:10px;background:#fff;min-height:90px;overflow:hidden;transition:transform .12s}
+.item-card{display:flex;flex-direction:column;padding:16px;border:1px solid #e6e2dc;border-radius:10px;background:#fff;min-height:100px;overflow:hidden;transition:transform .12s}
 .item-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.06)}
 .item-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .item-name{font-weight:700;font-size:15px}
@@ -47,6 +47,30 @@
 .item-card.alimento .item-name,
 .item-card.ingrediente .item-name{color:#fff}
 .item-card .product-price{color:rgba(255,255,255,0.95);font-weight:700}
+
+/* Cliente card slight tweak */
+.cliente-card{min-height:110px;padding:14px;display:flex;flex-direction:row;align-items:flex-start;gap:12px}
+.cliente-card .item-meta{font-size:13px;color:#666;margin-top:6px}
+
+/* Card actions: vertical column on the right to use space efficiently */
+.card-actions{margin-top:0;display:flex;flex-direction:column;gap:8px;width:150px;align-items:stretch;justify-content:flex-start}
+.card-actions .small,.card-actions .edit-btn,.card-actions .action-btn,.card-actions .danger-btn{width:100%}
+
+@media (max-width:720px){
+	.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+	.cliente-card{flex-direction:column}
+	.card-actions{flex-direction:row;flex-wrap:wrap;width:100%;gap:8px}
+	.card-actions .small{flex:1 1 45%}
+}
+
+/* Discount badge */
+.discount-badge{margin-top:8px;display:inline-block;padding:6px 10px;background:#ecfdf5;color:#065f46;border-radius:10px;font-weight:700;font-size:13px}
+
+/* Estrategia modal tweaks */
+.modal .field input[type="number"]{max-width:160px}
+/* Assign modal list */
+.modal div[style*="max-height:320px"] > div{display:flex;align-items:center}
+.modal div[style*="max-height:320px"] .action-btn{padding:6px 10px}
 
 /* Modal styles */
 .modal-overlay{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.36);display:flex;align-items:center;justify-content:center;z-index:2000}
