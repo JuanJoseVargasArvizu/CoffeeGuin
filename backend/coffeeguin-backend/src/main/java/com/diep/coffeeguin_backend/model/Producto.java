@@ -2,6 +2,7 @@ package com.diep.coffeeguin_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +13,28 @@ import java.util.List;
 	@JsonSubTypes.Type(value = Bebida.class, name = "bebida"),
 	@JsonSubTypes.Type(value = Alimento.class, name = "alimento")
 })
+
+@Entity 
+@Table(name = "productos")
+@Inheritance(strategy = InheritanceType.JOINED)
+
 public abstract class Producto {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String nombre;
 	private double precio;
+	@ManyToMany
+    @JoinTable(
+        name = "producto_receta",
+        joinColumns = @JoinColumn(name = "producto_id"),
+        inverseJoinColumns = @JoinColumn(name = "ingrediente_id")
+    )
 	private List<Ingrediente> receta;
 	private String tipo;
+	@ManyToOne
+    @JoinColumn(name = "categoria_id")
 	private Categoria categoria;
 
 	protected Producto() {
