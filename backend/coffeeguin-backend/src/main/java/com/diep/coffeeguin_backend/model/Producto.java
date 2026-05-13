@@ -17,12 +17,13 @@ public abstract class Producto {
 	private Long id;
 	private String nombre;
 	private double precio;
-	private List<Ingrediente> receta;
+	private String descripcion;
+	private List<Ingrediente> ingredientes;
 	private String tipo;
 	private Categoria categoria;
 
 	protected Producto() {
-		this.receta = new ArrayList<>();
+		this.ingredientes = new ArrayList<>();
 	}
 
 	protected Producto(String tipo) {
@@ -54,12 +55,20 @@ public abstract class Producto {
 		this.precio = precio;
 	}
 
-	public List<Ingrediente> getReceta() {
-		return receta;
+	public String getDescripcion() {
+		return descripcion;
 	}
 
-	public void setReceta(List<Ingrediente> receta) {
-		this.receta = receta != null ? receta : new ArrayList<>();
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
+	}
+
+	public List<Ingrediente> getIngredientes() {
+		return ingredientes;
+	}
+
+	public void setIngredientes(List<Ingrediente> ingredientes) {
+		this.ingredientes = ingredientes != null ? ingredientes : new ArrayList<>();
 	}
 
 	public String getTipo() {

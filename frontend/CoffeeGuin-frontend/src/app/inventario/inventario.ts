@@ -9,7 +9,7 @@ import { ProductoService, Producto } from '../services/producto.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './inventario.html',
-  styleUrl: './inventario.css',
+  styleUrls: ['./inventario.css'],
 })
 export class InventarioComponent implements OnInit {
   private categoriaService = inject(CategoriaService);
@@ -21,6 +21,9 @@ export class InventarioComponent implements OnInit {
   categoriaForm: any = { nombre: '' };
   productoForm: any = { nombre: '', precio: 0, tipo: 'bebida', categoriaId: null, stockActual: null, umbralAlerta: null };
 
+  showCategoriaModal = false;
+  showProductoModal = false;
+
   ngOnInit(): void {
     this.loadAll();
   }
@@ -30,8 +33,17 @@ export class InventarioComponent implements OnInit {
     this.productoService.list().subscribe({ next: (v: any) => (this.productos = v || []), error: () => (this.productos = []) });
   }
 
-  startEditCategoria(c: Categoria) { this.categoriaForm = { ...c }; }
-  cancelCategoria() { this.categoriaForm = { nombre: '' }; }
+  startEditCategoria(c: Categoria) { this.categoriaForm = { ...c }; this.openCategoriaModal(); }
+  cancelCategoria() { this.categoriaForm = { nombre: '' }; this.closeCategoriaModal(); }
+
+  openCategoriaModal(newOne = false) {
+    if (newOne) this.categoriaForm = { nombre: '' };
+    this.showCategoriaModal = true;
+  }
+  closeCategoriaModal() {
+    this.showCategoriaModal = false;
+    this.categoriaForm = { nombre: '' };
+  }
 
   saveCategoria() {
     if (this.categoriaForm.id) {
@@ -40,6 +52,7 @@ export class InventarioComponent implements OnInit {
       this.categoriaService.create({ nombre: this.categoriaForm.nombre }).subscribe(() => this.loadAll());
     }
     this.categoriaForm = { nombre: '' };
+    this.closeCategoriaModal();
   }
 
   delCategoria(c: Categoria) {
@@ -49,8 +62,18 @@ export class InventarioComponent implements OnInit {
 
   startEditProducto(p: Producto) {
     this.productoForm = { ...p, categoriaId: p.categoria?.id ?? p.categoria };
+    this.openProductoModal();
   }
   cancelProducto() { this.productoForm = { nombre: '', precio: 0, tipo: 'bebida', categoriaId: null, stockActual: null, umbralAlerta: null }; }
+
+  openProductoModal(newOne = false) {
+    if (newOne) this.productoForm = { nombre: '', precio: 0, tipo: 'bebida', categoriaId: null, stockActual: null, umbralAlerta: null };
+    this.showProductoModal = true;
+  }
+  closeProductoModal() {
+    this.showProductoModal = false;
+    this.productoForm = { nombre: '', precio: 0, tipo: 'bebida', categoriaId: null, stockActual: null, umbralAlerta: null };
+  }
 
   saveProducto() {
     const payload: any = {
@@ -70,6 +93,7 @@ export class InventarioComponent implements OnInit {
     }
 
     this.cancelProducto();
+    this.closeProductoModal();
   }
 
   delProducto(p: Producto) {

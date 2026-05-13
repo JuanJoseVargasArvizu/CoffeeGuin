@@ -31,23 +31,24 @@ public class ProductoDAOImpl implements ProductoDAO {
 
 	@Override
 	public void agregar(Producto p) {
-		String sql = "INSERT INTO producto (nombre, precio, tipo, stock_actual, umbral_alerta, categoria_id) VALUES (?, ?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO producto (nombre, precio, descripcion, tipo, stock_actual, umbral_alerta, categoria_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 			statement.setString(1, p.getNombre());
 			statement.setDouble(2, p.getPrecio());
-			statement.setString(3, resolverTipo(p));
+			statement.setString(3, p.getDescripcion());
+			statement.setString(4, resolverTipo(p));
 			if (p instanceof Ingrediente ingrediente) {
-				statement.setInt(4, ingrediente.getStockActual());
-				statement.setInt(5, ingrediente.getUmbralAlerta());
+				statement.setInt(5, ingrediente.getStockActual());
+				statement.setInt(6, ingrediente.getUmbralAlerta());
 			} else {
-				statement.setNull(4, java.sql.Types.INTEGER);
 				statement.setNull(5, java.sql.Types.INTEGER);
+				statement.setNull(6, java.sql.Types.INTEGER);
 			}
 			if (p.getCategoria() != null && p.getCategoria().getId() != null) {
-				statement.setLong(6, p.getCategoria().getId());
+				statement.setLong(7, p.getCategoria().getId());
 			} else {
-				statement.setNull(6, java.sql.Types.BIGINT);
+				statement.setNull(7, java.sql.Types.BIGINT);
 			}
 			statement.executeUpdate();
 
@@ -57,7 +58,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 				}
 			}
 
-			sincronizarReceta(connection, p);
+			sincronizarIngredientes(connection, p);
 		} catch (SQLException exception) {
 			throw new IllegalStateException("No se pudo registrar el producto", exception);
 		}
@@ -88,7 +89,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 
 	@Override
 	public List<Producto> listarTodos() {
-		String sql = "SELECT id, nombre, precio, tipo, stock_actual, umbral_alerta, categoria_id FROM producto ORDER BY id";
+		String sql = "SELECT id, nombre, precio, descripcion, tipo, stock_actual, umbral_alerta, categoria_id FROM producto ORDER BY id";
 		List<Producto> productos = new ArrayList<>();
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql);
@@ -96,7 +97,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 			while (resultSet.next()) {
 				Producto producto = mapearProducto(resultSet);
 				if (!(producto instanceof Ingrediente)) {
-					producto.setReceta(cargarReceta(connection, producto.getId()));
+					producto.setIngredientes(cargarIngredientes(connection, producto.getId()));
 				}
 				productos.add(producto);
 			}
@@ -112,7 +113,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 			throw new IllegalArgumentException("La categoria debe tener id para consultar sus productos");
 		}
 
-		String sql = "SELECT id, nombre, precio, tipo, stock_actual, umbral_alerta, categoria_id FROM producto WHERE categoria_id = ? ORDER BY id";
+		String sql = "SELECT id, nombre, precio, descripcion, tipo, stock_actual, umbral_alerta, categoria_id FROM producto WHERE categoria_id = ? ORDER BY id";
 		List<Producto> productos = new ArrayList<>();
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -121,7 +122,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 				while (resultSet.next()) {
 					Producto producto = mapearProducto(resultSet);
 					if (!(producto instanceof Ingrediente)) {
-						producto.setReceta(cargarReceta(connection, producto.getId()));
+						producto.setIngredientes(cargarIngredientes(connection, producto.getId()));
 					}
 					productos.add(producto);
 				}
@@ -132,8 +133,8 @@ public class ProductoDAOImpl implements ProductoDAO {
 		}
 	}
 
-	private Producto buscarPorIdInterno(int id, boolean cargarReceta) {
-		String sql = "SELECT id, nombre, precio, tipo, stock_actual, umbral_alerta, categoria_id FROM producto WHERE id = ?";
+	private Producto buscarPorIdInterno(int id, boolean cargarIngredientes) {
+		String sql = "SELECT id, nombre, precio, descripcion, tipo, stock_actual, umbral_alerta, categoria_id FROM producto WHERE id = ?";
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setInt(1, id);
@@ -143,8 +144,8 @@ public class ProductoDAOImpl implements ProductoDAO {
 				}
 
 				Producto producto = mapearProducto(resultSet);
-				if (cargarReceta && !(producto instanceof Ingrediente)) {
-					producto.setReceta(cargarReceta(connection, producto.getId()));
+				if (cargarIngredientes && !(producto instanceof Ingrediente)) {
+					producto.setIngredientes(cargarIngredientes(connection, producto.getId()));
 				}
 				return producto;
 			}
@@ -159,31 +160,32 @@ public class ProductoDAOImpl implements ProductoDAO {
 			throw new IllegalArgumentException("El producto debe tener id para actualizarse");
 		}
 
-		String sql = "UPDATE producto SET nombre = ?, precio = ?, tipo = ?, stock_actual = ?, umbral_alerta = ?, categoria_id = ? WHERE id = ?";
+		String sql = "UPDATE producto SET nombre = ?, precio = ?, descripcion = ?, tipo = ?, stock_actual = ?, umbral_alerta = ?, categoria_id = ? WHERE id = ?";
 		try (Connection connection = dbConnection.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setString(1, p.getNombre());
 			statement.setDouble(2, p.getPrecio());
-			statement.setString(3, resolverTipo(p));
+			statement.setString(3, p.getDescripcion());
+			statement.setString(4, resolverTipo(p));
 			if (p instanceof Ingrediente ingrediente) {
-				statement.setInt(4, ingrediente.getStockActual());
-				statement.setInt(5, ingrediente.getUmbralAlerta());
+				statement.setInt(5, ingrediente.getStockActual());
+				statement.setInt(6, ingrediente.getUmbralAlerta());
 			} else {
-				statement.setNull(4, java.sql.Types.INTEGER);
 				statement.setNull(5, java.sql.Types.INTEGER);
+				statement.setNull(6, java.sql.Types.INTEGER);
 			}
 			if (p.getCategoria() != null && p.getCategoria().getId() != null) {
-				statement.setLong(6, p.getCategoria().getId());
+				statement.setLong(7, p.getCategoria().getId());
 			} else {
-				statement.setNull(6, java.sql.Types.BIGINT);
+				statement.setNull(7, java.sql.Types.BIGINT);
 			}
-			statement.setLong(7, p.getId());
+			statement.setLong(8, p.getId());
 
 			if (statement.executeUpdate() == 0) {
 				throw new NoSuchElementException("No existe un producto con id " + p.getId());
 			}
 
-			sincronizarReceta(connection, p);
+			sincronizarIngredientes(connection, p);
 		} catch (SQLException exception) {
 			throw new IllegalStateException("No se pudo actualizar el producto", exception);
 		}
@@ -194,6 +196,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 			+ "id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, "
 			+ "nombre VARCHAR(150) NOT NULL, "
 			+ "precio DOUBLE PRECISION NOT NULL, "
+			+ "descripcion TEXT, "
 			+ "tipo VARCHAR(50) NOT NULL, "
 			+ "stock_actual INT, "
 			+ "umbral_alerta INT, "
@@ -201,6 +204,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 			+ "CONSTRAINT fk_producto_categoria FOREIGN KEY (categoria_id) REFERENCES categoria(id)"
 			+ ")";
 		String migracionCategoriaSql = "ALTER TABLE producto ADD COLUMN IF NOT EXISTS categoria_id BIGINT";
+		String migracionDescripcionSql = "ALTER TABLE producto ADD COLUMN IF NOT EXISTS descripcion TEXT";
 		String recetaSql = "CREATE TABLE IF NOT EXISTS producto_receta ("
 			+ "producto_id BIGINT NOT NULL, "
 			+ "ingrediente_id BIGINT NOT NULL, "
@@ -212,6 +216,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 			 Statement statement = connection.createStatement()) {
 			statement.execute(productoSql);
 			statement.execute(migracionCategoriaSql);
+			statement.execute(migracionDescripcionSql);
 			statement.execute(recetaSql);
 		} catch (SQLException exception) {
 			throw new IllegalStateException("No se pudo preparar la tabla de productos", exception);
@@ -234,6 +239,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 		producto.setId(resultSet.getLong("id"));
 		producto.setNombre(resultSet.getString("nombre"));
 		producto.setPrecio(resultSet.getDouble("precio"));
+		producto.setDescripcion(resultSet.getString("descripcion"));
 		producto.setTipo(tipo);
 		Long categoriaId = resultSet.getObject("categoria_id", Long.class);
 		if (categoriaId != null) {
@@ -243,24 +249,24 @@ public class ProductoDAOImpl implements ProductoDAO {
 		return producto;
 	}
 
-	private List<Ingrediente> cargarReceta(Connection connection, Long productoId) throws SQLException {
+	private List<Ingrediente> cargarIngredientes(Connection connection, Long productoId) throws SQLException {
 		String sql = "SELECT ingrediente_id FROM producto_receta WHERE producto_id = ? ORDER BY ingrediente_id";
-		List<Ingrediente> receta = new ArrayList<>();
+		List<Ingrediente> ingredientes = new ArrayList<>();
 		try (PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setLong(1, productoId);
 			try (ResultSet resultSet = statement.executeQuery()) {
 				while (resultSet.next()) {
 					Producto ingrediente = buscarPorIdInterno(resultSet.getInt("ingrediente_id"), false);
 					if (ingrediente instanceof Ingrediente ingredienteModelo) {
-						receta.add(ingredienteModelo);
+						ingredientes.add(ingredienteModelo);
 					}
 				}
 			}
 		}
-		return receta;
+		return ingredientes;
 	}
 
-	private void sincronizarReceta(Connection connection, Producto producto) throws SQLException {
+	private void sincronizarIngredientes(Connection connection, Producto producto) throws SQLException {
 		if (producto.getId() == null) {
 			return;
 		}
@@ -270,13 +276,13 @@ public class ProductoDAOImpl implements ProductoDAO {
 			deleteStatement.executeUpdate();
 		}
 
-		if (producto.getReceta() == null || producto.getReceta().isEmpty()) {
+		if (producto.getIngredientes() == null || producto.getIngredientes().isEmpty()) {
 			return;
 		}
 
 		String insertSql = "INSERT INTO producto_receta (producto_id, ingrediente_id) VALUES (?, ?)";
 		try (PreparedStatement insertStatement = connection.prepareStatement(insertSql)) {
-			for (Ingrediente ingrediente : producto.getReceta()) {
+			for (Ingrediente ingrediente : producto.getIngredientes()) {
 				if (ingrediente != null && ingrediente.getId() != null) {
 					insertStatement.setLong(1, producto.getId());
 					insertStatement.setLong(2, ingrediente.getId());

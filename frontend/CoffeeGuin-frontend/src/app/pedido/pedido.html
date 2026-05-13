@@ -1,15 +1,75 @@
 <h1>Pedido</h1>
-<p>Menu (categorías y productos)</p>
 
 <div *ngIf="error" class="error">{{ error }}</div>
 
-<section *ngIf="categorias.length > 0">
-	<article *ngFor="let c of categorias" class="category">
-		<h3>{{ c.nombre }}</h3>
-		<ul>
-			<li *ngFor="let p of c.productos">{{ p.nombre }} <span *ngIf="p.precio"> - $ {{ p.precio }}</span></li>
+<div class="pedido-layout">
+	<div class="pedido-main">
+		<section class="categories-section" *ngIf="categorias.length > 0">
+			<h2>Categorías</h2>
+			<div class="grid">
+				<button 
+					*ngFor="let c of categorias" 
+					class="category-btn"
+					[class.active]="selectedCategoryId === c.id"
+					(click)="selectCategory(c.id!)">
+					<!-- geometric icon per category -->
+					<ng-container [ngSwitch]="c.icon">
+						<svg *ngSwitchCase="'circle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
+						<svg *ngSwitchCase="'square'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+						<svg *ngSwitchCase="'triangle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,5 19,19 5,19" fill="currentColor"/></svg>
+						<svg *ngSwitchCase="'hexagon'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,4 18,7 18,13 12,16 6,13 6,7" fill="currentColor"/></svg>
+						<svg *ngSwitchDefault class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
+					</ng-container>
+					<div class="btn-label">{{ c.nombre }}</div>
+				</button>
+			</div>
+		</section>
+
+		<section class="products-section" *ngIf="selectedCategoryId !== null">
+			<h2>Productos</h2>
+			<div *ngIf="loadingProductos" class="loading">Cargando productos...</div>
+			<div class="grid" *ngIf="!loadingProductos && productos.length > 0">
+				<div *ngFor="let p of productos" class="product-card">
+					<div class="product-main">
+						<div class="product-top">
+							<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+								<path fill="currentColor" d="M2,21H20V19H2V21M20,8H18V5H20V8M20,8V10A2,2 0 0,1 18,12H16V13A2,2 0 0,1 14,15H6A2,2 0 0,1 4,13V5H16V3H2V13A4,4 0 0,0 6,17H14A4,4 0 0,0 18,13V12H20A2,2 0 0,0 22,10V8A2,2 0 0,0 20,8M9,2V4H11V2H9M13,2V4H15V2H13M5,2V4H7V2H5Z" />
+							</svg>
+							<div>
+								<div class="product-name">{{ p.nombre }}</div>
+								<div class="product-price" *ngIf="p.precio">$ {{ p.precio }}</div>
+							</div>
+						</div>
+					</div>
+					<button class="add-btn" title="Agregar" (click)="addToOrder(p)">+</button>
+				</div>
+			</div>
+			<p *ngIf="!loadingProductos && productos.length === 0" class="no-products">No hay productos en esta categoría.</p>
+		</section>
+	</div>
+
+	<aside class="pedido-sidebar">
+		<h3>Pedido actual</h3>
+		<div *ngIf="pedidoActual.length === 0" class="empty">No hay productos añadidos.</div>
+		<ul class="order-list" *ngIf="pedidoActual.length > 0">
+			<li *ngFor="let item of pedidoActual; let i = index" class="order-item"
+					[style.transform]="'translate(' + (i * 6) + 'px,' + (i * 4) + 'px)'"
+					[style.zIndex]="1000 - i">
+				<div class="order-item-left">
+					<div class="order-name">{{ item.producto.nombre }}</div>
+					<div class="order-qty">Cantidad: {{ item.cantidad }}</div>
+				</div>
+				<div class="order-item-right">
+					<div class="order-sub">$ {{ (item.producto.precio ?? 0) * item.cantidad }}</div>
+					<button class="small" (click)="removeFromOrder(item.producto)">-</button>
+				</div>
+			</li>
 		</ul>
-	</article>
-</section>
+		<div class="order-total" *ngIf="pedidoActual.length > 0">
+			<div>Total</div>
+			<div class="total-amount">$ {{ total }}</div>
+		</div>
+	</aside>
+</div>
 
 <p *ngIf="!error && categorias.length === 0">No hay categorias en el menu.</p>
