@@ -2,6 +2,7 @@ package com.diep.coffeeguin_backend.controller;
 
 import com.diep.coffeeguin_backend.dao.VentaDAO;
 import com.diep.coffeeguin_backend.dao.MesaDAO;
+import com.diep.coffeeguin_backend.dao.ProductoDAO;
 import com.diep.coffeeguin_backend.model.Producto;
 import com.diep.coffeeguin_backend.model.Venta;
 import com.diep.coffeeguin_backend.model.Mesa;
@@ -19,39 +20,37 @@ public class VentaController {
     private VentaDAO ventaDAO;
 
     @Autowired
-    private MesaDAO mesaDAO; 
+    private MesaDAO mesaDAO;
+
+    @Autowired
+    private ProductoDAO productoDAO;
 
     @GetMapping
     public List<Venta> obtenerHistorial() {
         return ventaDAO.findAll();
     }
 
-    @GetMapping("/{id}")
-    public Venta obtenerDetalleVenta(@PathVariable Integer id) {
-        return ventaDAO.findById(id);
-    }
-
     @PostMapping
     public Venta registrarVenta(@RequestBody Venta nuevaVenta) {
         
-        nuevaVenta.setFecha(LocalDateTime.now());
+        // Asegurar la fecha
+        if (nuevaVenta.getFecha() == null) {
+            nuevaVenta.setFecha(LocalDateTime.now());
+        }
+        
+        // Cálculo de subtotal
         double subtotalCalculado = 0.0;
-        //calculo automatico
-        if (nuevaVenta.getProductos() != null && !nuevaVenta.getProductos().isEmpty()) {
+        if (nuevaVenta.getProductos() != null) {
             for (Producto p : nuevaVenta.getProductos()) {
                 subtotalCalculado += p.getPrecio(); 
             }
         }
         nuevaVenta.setSubtotal(subtotalCalculado);
 
-        // Lógica de descuento
-        double totalFinal = subtotalCalculado;
-        if (nuevaVenta.getCliente() != null) {
-            totalFinal = subtotalCalculado * 0.90; 
-        }
-        nuevaVenta.setTotalFinal(totalFinal);
+        // Aplicar descuento
+        nuevaVenta.finalizarVenta(); 
 
-        // asignacion de mesa
+        // Ocupar Mesa
         if (nuevaVenta.getMesa() != null) {
             Mesa mesaAsignada = mesaDAO.findById(nuevaVenta.getMesa().getId());
             if (mesaAsignada != null) {
@@ -59,19 +58,16 @@ public class VentaController {
                 mesaDAO.save(mesaAsignada); 
             }
         }
-
-        //codigo para restar ingredientes 
-
-        
+        if (nuevaVenta.getProductos() != null) {
+            for (Producto p : nuevaVenta.getProductos()) {
+                Producto productoEnBD = productoDAO.buscarPorId(p.getId().intValue());
+                
+                if (productoEnBD != null) {
+                    productoDAO.actualizar(productoEnBD);
+                }
+            }
+        }
         Venta ventaGuardada = ventaDAO.save(nuevaVenta);
-
-        // Genera recibo detallado
-        System.out.println("--- RECIBO GENERADO ---");
-        System.out.println("Fecha: " + ventaGuardada.getFecha());
-        System.out.println("Subtotal: $" + ventaGuardada.getSubtotal());
-        System.out.println("Total a Pagar: $" + ventaGuardada.getTotalFinal());
-        System.out.println("-----------------------");
-
-        return ventaGuardada;
+        return ventaGuardada; 
     }
 }
