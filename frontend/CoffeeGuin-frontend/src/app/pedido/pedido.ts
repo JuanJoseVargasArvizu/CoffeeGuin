@@ -27,18 +27,29 @@ export class PedidoComponent implements OnInit {
     this.error = '';
     this.http.get<unknown>(`${environment.apiUrl}/menu`).subscribe({
       next: (res: any) => {
+        // New API: returns array of { categoria, disponibles, noDisponibles }
         if (Array.isArray(res)) {
-          this.categorias = res;
+          this.categorias = res.map((item: any) => {
+            const cat = item.categoria || {};
+            return {
+              id: cat.id,
+              nombre: cat.nombre ?? 'Sin nombre',
+              disponibles: Array.isArray(item.disponibles) ? item.disponibles : [],
+              noDisponibles: Array.isArray(item.noDisponibles) ? item.noDisponibles : []
+            } as any;
+          });
         } else if (res && Array.isArray(res.categorias)) {
           this.categorias = res.categorias;
         } else {
           this.categorias = [];
         }
+
         // If we don't have a selected category yet, auto-select the first one
         if (this.categorias.length > 0 && this.selectedCategoryId == null) {
           const firstId = this.categorias[0].id;
           if (firstId != null) this.selectCategory(firstId);
         }
+
         // assign a simple geometric icon type to each category for visuals
         const shapes = ['circle', 'square', 'triangle', 'hexagon'];
         this.categorias = this.categorias.map((c: any, i: number) => ({ ...c, icon: shapes[i % shapes.length] }));
@@ -51,9 +62,24 @@ export class PedidoComponent implements OnInit {
     this.selectedCategoryId = categoryId;
     this.loadingProductos = true;
     this.productos = [];
-    this.http.get<Producto[]>(`${environment.apiUrl}/menu/categorias/${categoryId}/productos`).subscribe({
+    this.http.get<unknown>(`${environment.apiUrl}/menu/categorias/${categoryId}/productos`).subscribe({
       next: (res: any) => {
-        this.productos = Array.isArray(res) ? res : (res && Array.isArray(res.productos) ? res.productos : []);
+        // New API: returns { categoria, disponibles, noDisponibles }
+        let disponibles: any[] = [];
+        let noDisponibles: any[] = [];
+        if (Array.isArray(res)) {
+          // array -> assume all available
+          disponibles = res.map((p: any) => ({ ...p, disponible: true }));
+        } else if (res && Array.isArray(res.disponibles)) {
+          disponibles = res.disponibles.map((p: any) => ({ ...p, disponible: true }));
+          noDisponibles = Array.isArray(res.noDisponibles) ? res.noDisponibles.map((p: any) => ({ ...p, disponible: false })) : [];
+        } else if (res && Array.isArray(res.productos)) {
+          // fallback older format
+          disponibles = res.productos.map((p: any) => ({ ...p, disponible: true }));
+        }
+
+        // Put disponibles first, then not available (visual cue)
+        this.productos = [...disponibles, ...noDisponibles];
         this.loadingProductos = false;
       },
       error: () => {
@@ -94,5 +120,5 @@ export class PedidoComponent implements OnInit {
   }
 }
 
-interface Categoria { id?: number; nombre: string; productos?: any[]; icon?: string }
-interface Producto { id?: number; nombre: string; precio?: number }
+interface Categoria { id?: number; nombre: string; productos?: any[]; icon?: string; disponibles?: Producto[]; noDisponibles?: Producto[] }
+interface Producto { id?: number; nombre: string; precio?: number; descripcion?: string; ingredientes?: any[]; disponible?: boolean }

@@ -1,6 +1,7 @@
 package com.diep.coffeeguin_backend.controller;
 
 import com.diep.coffeeguin_backend.model.Producto;
+import com.diep.coffeeguin_backend.model.Ingrediente;
 import com.diep.coffeeguin_backend.service.ProductoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,12 @@ public class ProductoController {
 	public ResponseEntity<List<Producto>> listarProductos() {
 		List<Producto> productos = productoService.consultarTodos();
 		return ResponseEntity.ok(productos);
+	}
+
+	@GetMapping("/ingredientes")
+	public ResponseEntity<List<Ingrediente>> listarIngredientes() {
+		List<Ingrediente> ingredientes = productoService.listarIngredientes();
+		return ResponseEntity.ok(ingredientes);
 	}
 	@PostMapping
 	public ResponseEntity<Producto> nuevoProducto(@RequestBody Producto producto) {

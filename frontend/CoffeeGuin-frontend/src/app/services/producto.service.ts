@@ -13,6 +13,10 @@ export class ProductoService {
     return this.http.get<Producto[]>(`${this.base}/productos`);
   }
 
+  listIngredientes() {
+    return this.http.get<any[]>(`${this.base}/productos/ingredientes`);
+  }
+
   create(payload: any) {
     return this.http.post<Producto>(`${this.base}/productos`, payload);
   }

@@ -14,6 +14,8 @@ public interface ProductoDAO {
 	Producto buscarPorId(int id);
 	List<Producto> listarTodos();
 	List<Producto> listarPorCategoria(Categoria categoria);
+	List<Producto> listarTodosDisponibles();
+	List<Producto> listarPorCategoriaDisponibles(Categoria categoria);
 
 	void actualizar(Producto p);
 }

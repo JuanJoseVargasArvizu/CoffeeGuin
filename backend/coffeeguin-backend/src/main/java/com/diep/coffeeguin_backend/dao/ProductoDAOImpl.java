@@ -97,7 +97,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 			while (resultSet.next()) {
 				Producto producto = mapearProducto(resultSet);
 				if (!(producto instanceof Ingrediente)) {
-					producto.setIngredientes(cargarIngredientes(connection, producto.getId()));
+					producto.setIngredientes(cargarIngredientes(producto.getId()));
 				}
 				productos.add(producto);
 			}
@@ -122,7 +122,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 				while (resultSet.next()) {
 					Producto producto = mapearProducto(resultSet);
 					if (!(producto instanceof Ingrediente)) {
-						producto.setIngredientes(cargarIngredientes(connection, producto.getId()));
+						producto.setIngredientes(cargarIngredientes(producto.getId()));
 					}
 					productos.add(producto);
 				}
@@ -145,7 +145,7 @@ public class ProductoDAOImpl implements ProductoDAO {
 
 				Producto producto = mapearProducto(resultSet);
 				if (cargarIngredientes && !(producto instanceof Ingrediente)) {
-					producto.setIngredientes(cargarIngredientes(connection, producto.getId()));
+					producto.setIngredientes(cargarIngredientes(producto.getId()));
 				}
 				return producto;
 			}
@@ -249,10 +249,11 @@ public class ProductoDAOImpl implements ProductoDAO {
 		return producto;
 	}
 
-	private List<Ingrediente> cargarIngredientes(Connection connection, Long productoId) throws SQLException {
+	private List<Ingrediente> cargarIngredientes(Long productoId) throws SQLException {
 		String sql = "SELECT ingrediente_id FROM producto_receta WHERE producto_id = ? ORDER BY ingrediente_id";
 		List<Ingrediente> ingredientes = new ArrayList<>();
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
+		try (Connection connection = dbConnection.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setLong(1, productoId);
 			try (ResultSet resultSet = statement.executeQuery()) {
 				while (resultSet.next()) {
@@ -290,6 +291,52 @@ public class ProductoDAOImpl implements ProductoDAO {
 				}
 			}
 			insertStatement.executeBatch();
+		}
+	}
+
+	@Override
+	public List<Producto> listarTodosDisponibles() {
+		String sql = "SELECT id, nombre, precio, descripcion, tipo, stock_actual, umbral_alerta, categoria_id FROM producto WHERE tipo != 'ingrediente' OR (tipo = 'ingrediente' AND stock_actual > 0) ORDER BY id";
+		List<Producto> productos = new ArrayList<>();
+		try (Connection connection = dbConnection.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql);
+			 ResultSet resultSet = statement.executeQuery()) {
+			while (resultSet.next()) {
+				Producto producto = mapearProducto(resultSet);
+				if (!(producto instanceof Ingrediente)) {
+					producto.setIngredientes(cargarIngredientes(producto.getId()));
+				}
+				productos.add(producto);
+			}
+			return productos;
+		} catch (SQLException exception) {
+			throw new IllegalStateException("No se pudo listar los productos disponibles", exception);
+		}
+	}
+
+	@Override
+	public List<Producto> listarPorCategoriaDisponibles(Categoria categoria) {
+		if (categoria == null || categoria.getId() == null) {
+			throw new IllegalArgumentException("La categoria debe tener id para consultar sus productos");
+		}
+
+		String sql = "SELECT id, nombre, precio, descripcion, tipo, stock_actual, umbral_alerta, categoria_id FROM producto WHERE categoria_id = ? AND (tipo != 'ingrediente' OR (tipo = 'ingrediente' AND stock_actual > 0)) ORDER BY id";
+		List<Producto> productos = new ArrayList<>();
+		try (Connection connection = dbConnection.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setLong(1, categoria.getId());
+			try (ResultSet resultSet = statement.executeQuery()) {
+				while (resultSet.next()) {
+					Producto producto = mapearProducto(resultSet);
+					if (!(producto instanceof Ingrediente)) {
+						producto.setIngredientes(cargarIngredientes(producto.getId()));
+					}
+					productos.add(producto);
+				}
+			}
+			return productos;
+		} catch (SQLException exception) {
+			throw new IllegalStateException("No se pudo listar los productos disponibles por categoria", exception);
 		}
 	}
 

@@ -29,7 +29,7 @@
 			<h2>Productos</h2>
 			<div *ngIf="loadingProductos" class="loading">Cargando productos...</div>
 			<div class="grid" *ngIf="!loadingProductos && productos.length > 0">
-				<div *ngFor="let p of productos" class="product-card">
+				<div *ngFor="let p of productos" class="product-card" [class.unavailable]="p.disponible === false">
 					<div class="product-main">
 						<div class="product-top">
 							<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -38,10 +38,11 @@
 							<div>
 								<div class="product-name">{{ p.nombre }}</div>
 								<div class="product-price" *ngIf="p.precio">$ {{ p.precio }}</div>
+								<div *ngIf="p.disponible === false" class="unavailable-badge">No disponible</div>
 							</div>
 						</div>
 					</div>
-					<button class="add-btn" title="Agregar" (click)="addToOrder(p)">+</button>
+					<button class="add-btn" title="Agregar" (click)="addToOrder(p)" [disabled]="p.disponible === false" [class.disabled]="p.disponible === false">+</button>
 				</div>
 			</div>
 			<p *ngIf="!loadingProductos && productos.length === 0" class="no-products">No hay productos en esta categoría.</p>

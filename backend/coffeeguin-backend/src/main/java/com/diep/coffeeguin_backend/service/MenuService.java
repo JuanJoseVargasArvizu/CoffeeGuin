@@ -25,11 +25,31 @@ public class MenuService {
 	}
 
 	public List<Producto> consultarPorCategoria(Categoria c) {
-		return productoDAO.listarPorCategoria(c);
+		return productoDAO.listarPorCategoriaDisponibles(c);
 	}
 
 	public Producto buscarProductoEnMenu(int id) {
-		return productoDAO.buscarPorId(id);
+		Producto producto = productoDAO.buscarPorId(id);
+		if (producto != null && !(producto instanceof com.diep.coffeeguin_backend.model.Ingrediente)) {
+			if (!tieneIngredientesDisponibles(producto)) {
+				return null;
+			}
+		}
+		return producto;
+	}
+
+	private boolean tieneIngredientesDisponibles(Producto producto) {
+		if (producto.getIngredientes() == null || producto.getIngredientes().isEmpty()) {
+			return false;
+		}
+
+		for (com.diep.coffeeguin_backend.model.Ingrediente ingrediente : producto.getIngredientes()) {
+			if (ingrediente.getStockActual() <= 0) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public List<Categoria> consultarCategorias() {

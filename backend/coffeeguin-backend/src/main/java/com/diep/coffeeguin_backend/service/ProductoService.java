@@ -3,11 +3,13 @@ package com.diep.coffeeguin_backend.service;
 import com.diep.coffeeguin_backend.dao.CategoriaDAO;
 import com.diep.coffeeguin_backend.dao.ProductoDAO;
 import com.diep.coffeeguin_backend.model.Producto;
+import com.diep.coffeeguin_backend.model.Ingrediente;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.ArrayList;
 
 @Service
 public class ProductoService {
@@ -43,5 +45,15 @@ public class ProductoService {
 
 	public List<Producto> consultarTodos() {
 		return productoDAO.listarTodos();
+	}
+
+	public List<Ingrediente> listarIngredientes() {
+		List<Ingrediente> ingredientes = new ArrayList<>();
+		for (Producto p : productoDAO.listarTodos()) {
+			if (p instanceof Ingrediente ingrediente) {
+				ingredientes.add(ingrediente);
+			}
+		}
+		return ingredientes;
 	}
 }

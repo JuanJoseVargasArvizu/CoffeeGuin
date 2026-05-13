@@ -12,7 +12,7 @@
 				<div class="item-name">{{ c.nombre }}</div>
 			</div>
 			<div class="item-meta">
-				<button type="button" class="small" (click)="startEditCategoria(c)">Editar</button>
+				<button type="button" class="small edit-btn" (click)="startEditCategoria(c)">Editar</button>
 				<button type="button" class="small danger-btn" (click)="delCategoria(c)">Eliminar</button>
 			</div>
 		</button>
@@ -26,7 +26,7 @@
 	</div>
 
 	<div class="grid">
-		<div *ngFor="let p of productos" class="item-card">
+		<div *ngFor="let p of productos" class="item-card" [ngClass]="p.tipo">
 			<div class="product-top">
 				<div>
 					<div class="item-name">{{ p.nombre }}</div>
@@ -36,8 +36,8 @@
 			</div>
 
 			<div style="margin-top:8px;display:flex;justify-content:flex-end;gap:8px">
-				<button type="button" class="small" (click)="startEditProducto(p)">Editar</button>
-				<button type="button" class="small danger-btn" (click)="delProducto(p)">Eliminar</button>
+					<button type="button" class="small edit-btn" (click)="startEditProducto(p)">Editar</button>
+					<button type="button" class="small danger-btn" (click)="delProducto(p)">Eliminar</button>
 			</div>
 		</div>
 	</div>
@@ -62,44 +62,69 @@
 	<div class="modal" (click)="$event.stopPropagation()">
 		<div class="modal-header"><h3>{{ productoForm.id ? 'Editar producto' : 'Agregar producto' }}</h3></div>
 		<form (ngSubmit)="saveProducto()">
-			<div class="field">
-				<label>Nombre</label>
-				<input class="search" [(ngModel)]="productoForm.nombre" name="nombre" placeholder="Nombre" required />
+			<div *ngIf="!productoForm.tipo" class="field">
+				<label>Tipo de producto</label>
+				<div class="type-selector">
+					<button aria-label="Bebida" type="button" class="type-btn bebida" [class.selected]="productoForm.tipo==='bebida'" (click)="setProductoTipo('bebida')">Bebida</button>
+					<button aria-label="Alimento" type="button" class="type-btn alimento" [class.selected]="productoForm.tipo==='alimento'" (click)="setProductoTipo('alimento')">Alimento</button>
+					<button aria-label="Ingrediente" type="button" class="type-btn ingrediente" [class.selected]="productoForm.tipo==='ingrediente'" (click)="setProductoTipo('ingrediente')">Ingrediente</button>
+				</div>
 			</div>
 
-			<div class="field">
-				<label>Precio</label>
-				<input class="search" type="number" [(ngModel)]="productoForm.precio" name="precio" placeholder="Precio" />
+			<div *ngIf="productoForm.tipo === 'bebida' || productoForm.tipo === 'alimento'">
+				<div class="field">
+					<label>Nombre</label>
+					<input class="search" [(ngModel)]="productoForm.nombre" name="nombre" placeholder="Nombre" required />
+				</div>
+
+				<div class="field">
+					<label>Precio</label>
+					<input class="search" type="number" [(ngModel)]="productoForm.precio" name="precio" placeholder="Precio" />
+				</div>
+
+				<div class="field">
+					<label>Categoría</label>
+					<select class="search" [(ngModel)]="productoForm.categoriaId" name="categoriaId">
+						<option [ngValue]="null">Sin categoría</option>
+						<option *ngFor="let c of categorias" [ngValue]="c.id">{{ c.nombre }}</option>
+					</select>
+				</div>
+
+				<div class="field">
+					<label>Ingredientes</label>
+					<div class="ingredients-list" style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;border-radius:6px">
+						<label *ngFor="let ing of ingredientes" style="display:flex;align-items:center;gap:8px;padding:4px 0">
+							<input type="checkbox" [checked]="isIngredienteSelected(ing.id)" (change)="toggleIngrediente(ing.id, $event.target.checked)" />
+							<span>{{ ing.nombre || ('ID ' + ing.id) }}</span>
+						</label>
+					</div>
+				</div>
 			</div>
 
-			<div class="field">
-				<label>Tipo</label>
-				<select class="search" [(ngModel)]="productoForm.tipo" name="tipo">
-					<option value="bebida">bebida</option>
-					<option value="alimento">alimento</option>
-					<option value="ingrediente">ingrediente</option>
-				</select>
-			</div>
+			<div *ngIf="productoForm.tipo === 'ingrediente'">
+				<div class="field">
+					<label>Nombre</label>
+					<input class="search" [(ngModel)]="productoForm.nombre" name="nombre" placeholder="Nombre" required />
+				</div>
 
-			<div class="field">
-				<label>Categoría</label>
-				<select class="search" [(ngModel)]="productoForm.categoriaId" name="categoriaId">
-					<option [ngValue]="null">Sin categoría</option>
-					<option *ngFor="let c of categorias" [ngValue]="c.id">{{ c.nombre }}</option>
-				</select>
-			</div>
+				<div class="field">
+					<label>Stock</label>
+					<input class="search" type="number" [(ngModel)]="productoForm.stockActual" name="stockActual" placeholder="Stock" />
+				</div>
 
-			<div class="field">
-				<label>Stock</label>
-				<input class="search" type="number" [(ngModel)]="productoForm.stockActual" name="stockActual" placeholder="Stock" />
+				<div class="field">
+					<label>Categoría (opcional)</label>
+					<select class="search" [(ngModel)]="productoForm.categoriaId" name="categoriaId">
+						<option [ngValue]="null">Sin categoría</option>
+						<option *ngFor="let c of categorias" [ngValue]="c.id">{{ c.nombre }}</option>
+					</select>
+				</div>
 			</div>
-
-			<!-- Umbral oculto: no mostrar por ahora, enviar vacío si se deja así -->
-			<!-- <input type="hidden" [(ngModel)]="productoForm.umbralAlerta" name="umbralAlerta" /> -->
 
 			<div class="modal-actions">
-				<button type="submit" class="action-btn">Guardar</button>
+				<button type="submit" class="action-btn" [disabled]="!productoForm.tipo">Guardar</button>
 				<button type="button" class="small" (click)="closeProductoModal()">Cancelar</button>
+				<button *ngIf="productoForm.tipo" type="button" class="small" (click)="productoForm.tipo = null">Cambiar tipo</button>
 			</div>
 		</form>
 	</div>
