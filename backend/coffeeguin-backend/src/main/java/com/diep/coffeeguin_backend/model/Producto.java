@@ -26,6 +26,7 @@ public abstract class Producto {
 	private String nombre;
 	private double precio;
 	private String descripcion;
+	@Transient
 	private List<Ingrediente> ingredientes;
 	private String tipo;
 	@ManyToOne
