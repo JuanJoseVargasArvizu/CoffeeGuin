@@ -13,7 +13,7 @@ public class Mesa {
     private Integer id;
 
     @Column(nullable = false)
-    private int numero;
+    private Integer numero;
 
     @Column(nullable = false, length = 20)
     private String estado;
@@ -27,7 +27,7 @@ public class Mesa {
     public Mesa() {
     }
 
-    public Mesa(int numero, String estado) {
+    public Mesa(Integer numero, String estado) {
         this.numero = numero;
         this.estado = estado;
     }
@@ -41,11 +41,11 @@ public class Mesa {
         this.id = id;
     }
 
-    public int getNumero() {
+    public Integer getNumero() {
         return numero;
     }
 
-    public void setNumero(int numero) {
+    public void setNumero(Integer numero) {
         this.numero = numero;
     }
 

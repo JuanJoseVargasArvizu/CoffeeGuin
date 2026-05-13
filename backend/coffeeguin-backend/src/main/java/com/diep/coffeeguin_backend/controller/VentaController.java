@@ -48,7 +48,9 @@ public class VentaController {
         nuevaVenta.setSubtotal(subtotalCalculado);
 
         // Aplicar descuento
-        nuevaVenta.finalizarVenta(); 
+        if (nuevaVenta.getCliente() != null) {
+            nuevaVenta.finalizarVenta(); 
+            }
 
         // Ocupar Mesa
         if (nuevaVenta.getMesa() != null) {
