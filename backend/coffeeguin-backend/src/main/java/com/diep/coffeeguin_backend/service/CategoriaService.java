@@ -1,6 +1,6 @@
 package com.diep.coffeeguin_backend.service;
 
-import com.diep.coffeeguin_backend.dao.CategoriaDAO;
+import com.diep.coffeeguin_backend.repository.CategoriaRepository;
 import com.diep.coffeeguin_backend.model.Categoria;
 import org.springframework.stereotype.Service;
 
@@ -10,40 +10,40 @@ import java.util.NoSuchElementException;
 @Service
 public class CategoriaService {
 
-	private final CategoriaDAO categoriaDAO;
+	private final CategoriaRepository categoriaRepository;
 
-	public CategoriaService(CategoriaDAO categoriaDAO) {
-		this.categoriaDAO = categoriaDAO;
+	public CategoriaService(CategoriaRepository categoriaRepository) {
+		this.categoriaRepository = categoriaRepository;
 	}
 
 	public List<Categoria> consultarTodos() {
-		return categoriaDAO.listarTodos();
+		return categoriaRepository.findAll();
 	}
 
 	public List<Categoria> consultarActivos() {
-		return categoriaDAO.listarTodos();
+		return categoriaRepository.findAll();
 	}
 
 	public void registrarNuevaCategoria(Categoria categoria) {
-		categoriaDAO.agregar(categoria);
+		categoriaRepository.save(categoria);
 	}
 
 	public void eliminarCategoria(Categoria categoria) {
 		validarCategoriaConId(categoria, "eliminarse");
-		Categoria existente = categoriaDAO.buscarPorId(categoria.getId().intValue());
+		Categoria existente = categoriaRepository.findById(categoria.getId()).orElse(null);
 		if (existente == null) {
 			throw new NoSuchElementException("No existe una categoria con id " + categoria.getId());
 		}
-		categoriaDAO.eliminar(existente);
+		categoriaRepository.delete(existente);
 	}
 
 	public void actualizarCategoria(Categoria categoria) {
 		validarCategoriaConId(categoria, "actualizarse");
-		Categoria existente = categoriaDAO.buscarPorId(categoria.getId().intValue());
+		Categoria existente = categoriaRepository.findById(categoria.getId()).orElse(null);
 		if (existente == null) {
 			throw new NoSuchElementException("No existe una categoria con id " + categoria.getId());
 		}
-		categoriaDAO.actualizar(categoria);
+		categoriaRepository.save(categoria);
 	}
 
 	private void validarCategoriaConId(Categoria categoria, String accion) {

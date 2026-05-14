@@ -1,6 +1,6 @@
 package com.diep.coffeeguin_backend.service;
 
-import com.diep.coffeeguin_backend.dao.ClienteDAO;
+import com.diep.coffeeguin_backend.repository.ClienteRepository;
 import com.diep.coffeeguin_backend.model.DescuentoPorcentaje;
 import com.diep.coffeeguin_backend.model.Cliente;
 import com.diep.coffeeguin_backend.model.EstrategiaDescuento;
@@ -13,11 +13,11 @@ import java.util.NoSuchElementException;
 @Service
 public class ClienteService {
 
-	private final ClienteDAO clienteDAO;
+	private final ClienteRepository clienteRepository;
 	private final EstrategiaDescuentoService estrategiaService;
 
-	public ClienteService(ClienteDAO clienteDAO, EstrategiaDescuentoService estrategiaService) {
-		this.clienteDAO = clienteDAO;
+	public ClienteService(ClienteRepository clienteRepository, EstrategiaDescuentoService estrategiaService) {
+		this.clienteRepository = clienteRepository;
 		this.estrategiaService = estrategiaService;
 	}
 
@@ -26,34 +26,34 @@ public class ClienteService {
 	 */
 	public void registrarNuevoCliente(Cliente cliente) {
 		validarClienteParaRegistro(cliente);
-		if (clienteDAO.buscarPorEmail(cliente.getEmail()) != null) {
+		if (clienteRepository.findByEmail(cliente.getEmail()).isPresent()) {
 			throw new IllegalArgumentException("Ya existe un cliente registrado con ese email");
 		}
 		cliente.setFechaRegistro(LocalDateTime.now());
 		cliente.setFechaActualizacion(LocalDateTime.now());
 		cliente.setActivo(true);
-		clienteDAO.agregar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	/**
 	 * Consulta todos los clientes registrados
 	 */
 	public List<Cliente> consultarTodos() {
-		return clienteDAO.listarTodos();
+		return clienteRepository.findAll();
 	}
 
 	/**
 	 * Consulta solo los clientes activos
 	 */
 	public List<Cliente> consultarActivos() {
-		return clienteDAO.listarActivos();
+		return clienteRepository.findByActivoTrueOrderById();
 	}
 
 	/**
 	 * Busca un cliente por ID
 	 */
 	public Cliente consultarPorId(int id) {
-		Cliente cliente = clienteDAO.buscarPorId(id);
+		Cliente cliente = clienteRepository.findById(id).orElse(null);
 		if (cliente == null) {
 			throw new NoSuchElementException("No existe un cliente con id " + id);
 		}
@@ -64,7 +64,7 @@ public class ClienteService {
 	 * Busca un cliente por email
 	 */
 	public Cliente consultarPorEmail(String email) {
-		Cliente cliente = clienteDAO.buscarPorEmail(email);
+		Cliente cliente = clienteRepository.findByEmail(email).orElse(null);
 		if (cliente == null) {
 			throw new NoSuchElementException("No existe un cliente con email " + email);
 		}
@@ -75,7 +75,7 @@ public class ClienteService {
 	 * Busca un cliente por teléfono
 	 */
 	public Cliente consultarPorTelefono(String telefono) {
-		Cliente cliente = clienteDAO.buscarPorTelefono(telefono);
+		Cliente cliente = clienteRepository.findByTelefono(telefono).orElse(null);
 		if (cliente == null) {
 			throw new NoSuchElementException("No existe un cliente con teléfono " + telefono);
 		}
@@ -89,7 +89,7 @@ public class ClienteService {
 		Cliente cliente = consultarPorId(clienteId);
 		
 		// Validar que el nuevo email no esté en uso (si es diferente)
-		if (email != null && !email.equals(cliente.getEmail()) && clienteDAO.buscarPorEmail(email) != null) {
+		if (email != null && !email.equals(cliente.getEmail()) && clienteRepository.findByEmail(email).isPresent()) {
 			throw new IllegalArgumentException("El email ingresado ya está registrado con otro cliente");
 		}
 		
@@ -98,7 +98,7 @@ public class ClienteService {
 		if (direccion != null) cliente.setDireccion(direccion);
 		
 		cliente.setFechaActualizacion(LocalDateTime.now());
-		clienteDAO.actualizar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	/**
@@ -113,7 +113,7 @@ public class ClienteService {
 		if (platoFavorito != null) cliente.setPlatoFavorito(platoFavorito);
 		
 		cliente.setFechaActualizacion(LocalDateTime.now());
-		clienteDAO.actualizar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class ClienteService {
 		EstrategiaDescuento estrategia = estrategiaService.consultarPorId(estrategiaId);
 		
 		cliente.setEstrategiaDescuento(estrategia);
-		clienteDAO.actualizar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	/**
@@ -133,7 +133,7 @@ public class ClienteService {
 	public void eliminarEstrategiaDescuento(int clienteId) {
 		Cliente cliente = consultarPorId(clienteId);
 		cliente.setEstrategiaDescuento(null);
-		clienteDAO.actualizar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	/**
@@ -148,7 +148,7 @@ public class ClienteService {
 	 * Lista todos los clientes que tienen una estrategia de descuento específica
 	 */
 	public List<Cliente> consultarClientesPorEstrategia(int estrategiaId) {
-		return clienteDAO.listarPorEstrategiaDescuento(estrategiaId);
+		return clienteRepository.findByEstrategia_Id(estrategiaId);
 	}
 
 	/**
@@ -158,7 +158,7 @@ public class ClienteService {
 		Cliente cliente = consultarPorId(clienteId);
 		cliente.setActivo(false);
 		cliente.setFechaActualizacion(LocalDateTime.now());
-		clienteDAO.actualizar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	/**
@@ -168,7 +168,7 @@ public class ClienteService {
 		Cliente cliente = consultarPorId(clienteId);
 		cliente.setActivo(true);
 		cliente.setFechaActualizacion(LocalDateTime.now());
-		clienteDAO.actualizar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	/**
@@ -176,7 +176,7 @@ public class ClienteService {
 	 */
 	public void eliminarCliente(int clienteId) {
 		Cliente cliente = consultarPorId(clienteId);
-		clienteDAO.eliminar(cliente);
+		clienteRepository.delete(cliente);
 	}
 
 	/**
@@ -187,12 +187,12 @@ public class ClienteService {
 		Cliente existente = consultarPorId(cliente.getId());
 		
 		// Validar que el nuevo email no esté en uso (si es diferente)
-		if (!cliente.getEmail().equals(existente.getEmail()) && clienteDAO.buscarPorEmail(cliente.getEmail()) != null) {
+		if (!cliente.getEmail().equals(existente.getEmail()) && clienteRepository.findByEmail(cliente.getEmail()).isPresent()) {
 			throw new IllegalArgumentException("El email ingresado ya está registrado con otro cliente");
 		}
 		
 		cliente.setFechaActualizacion(LocalDateTime.now());
-		clienteDAO.actualizar(cliente);
+		clienteRepository.save(cliente);
 	}
 
 	private void validarClienteParaRegistro(Cliente cliente) {

@@ -1,6 +1,8 @@
 package com.diep.coffeeguin_backend.service;
 
-import com.diep.coffeeguin_backend.dao.EstrategiaDescuentoDAO;
+import com.diep.coffeeguin_backend.repository.EstrategiaDescuentoRepository;
+import com.diep.coffeeguin_backend.repository.DescuentoPorcentajeRepository;
+import com.diep.coffeeguin_backend.repository.DescuentoFijoRepository;
 import com.diep.coffeeguin_backend.model.DescuentoFijo;
 import com.diep.coffeeguin_backend.model.DescuentoPorcentaje;
 import com.diep.coffeeguin_backend.model.EstrategiaDescuento;
@@ -12,10 +14,16 @@ import java.util.NoSuchElementException;
 @Service
 public class EstrategiaDescuentoService {
 
-	private final EstrategiaDescuentoDAO estrategiaDAO;
+	private final EstrategiaDescuentoRepository estrategiaRepository;
+	private final DescuentoPorcentajeRepository porcentajeRepository;
+	private final DescuentoFijoRepository fijoRepository;
 
-	public EstrategiaDescuentoService(EstrategiaDescuentoDAO estrategiaDAO) {
-		this.estrategiaDAO = estrategiaDAO;
+	public EstrategiaDescuentoService(EstrategiaDescuentoRepository estrategiaRepository,
+									  DescuentoPorcentajeRepository porcentajeRepository,
+									  DescuentoFijoRepository fijoRepository) {
+		this.estrategiaRepository = estrategiaRepository;
+		this.porcentajeRepository = porcentajeRepository;
+		this.fijoRepository = fijoRepository;
 	}
 
 	/**
@@ -24,9 +32,8 @@ public class EstrategiaDescuentoService {
 	public void registrarDescuentoPorcentaje(String nombre, String descripcion, Double porcentaje) {
 		validarPorcentaje(porcentaje);
 		validarNombre(nombre);
-		
 		DescuentoPorcentaje estrategia = new DescuentoPorcentaje(nombre, descripcion, porcentaje);
-		estrategiaDAO.agregar(estrategia);
+		porcentajeRepository.save(estrategia);
 	}
 
 	/**
@@ -35,30 +42,29 @@ public class EstrategiaDescuentoService {
 	public void registrarDescuentoFijo(String nombre, String descripcion, Double montoFijo) {
 		validarMontoFijo(montoFijo);
 		validarNombre(nombre);
-		
 		DescuentoFijo estrategia = new DescuentoFijo(nombre, descripcion, montoFijo);
-		estrategiaDAO.agregar(estrategia);
+		fijoRepository.save(estrategia);
 	}
 
 	/**
 	 * Consulta todas las estrategias de descuento
 	 */
 	public List<EstrategiaDescuento> consultarTodas() {
-		return estrategiaDAO.listarTodas();
+		return estrategiaRepository.findAll();
 	}
 
 	/**
 	 * Consulta solo las estrategias de descuento activas
 	 */
 	public List<EstrategiaDescuento> consultarActivas() {
-		return estrategiaDAO.listarActivas();
+		return estrategiaRepository.findByActivaTrue();
 	}
 
 	/**
 	 * Busca una estrategia de descuento por ID
 	 */
 	public EstrategiaDescuento consultarPorId(int id) {
-		EstrategiaDescuento estrategia = estrategiaDAO.buscarPorId(id);
+		EstrategiaDescuento estrategia = estrategiaRepository.findById(id).orElse(null);
 		if (estrategia == null) {
 			throw new NoSuchElementException("No existe una estrategia de descuento con id " + id);
 		}
@@ -69,14 +75,14 @@ public class EstrategiaDescuentoService {
 	 * Lista todas las estrategias de descuento por porcentaje
 	 */
 	public List<DescuentoPorcentaje> consultarPorcentajes() {
-		return estrategiaDAO.listarPorcentajes();
+		return porcentajeRepository.findAll();
 	}
 
 	/**
 	 * Lista todas las estrategias de descuento por monto fijo
 	 */
 	public List<DescuentoFijo> consultarFijos() {
-		return estrategiaDAO.listarFijos();
+		return fijoRepository.findAll();
 	}
 
 	/**
@@ -87,8 +93,7 @@ public class EstrategiaDescuentoService {
 		
 		// Verificar que exista
 		consultarPorId(estrategia.getId());
-		
-		estrategiaDAO.actualizar(estrategia);
+		estrategiaRepository.save(estrategia);
 	}
 
 	/**
@@ -98,7 +103,7 @@ public class EstrategiaDescuentoService {
 		validarNombre(nuevoNombre);
 		EstrategiaDescuento estrategia = consultarPorId(id);
 		estrategia.setNombre(nuevoNombre);
-		estrategiaDAO.actualizar(estrategia);
+		estrategiaRepository.save(estrategia);
 	}
 
 	/**
@@ -107,7 +112,7 @@ public class EstrategiaDescuentoService {
 	public void actualizarDescripcion(int id, String nuevaDescripcion) {
 		EstrategiaDescuento estrategia = consultarPorId(id);
 		estrategia.setDescripcion(nuevaDescripcion);
-		estrategiaDAO.actualizar(estrategia);
+		estrategiaRepository.save(estrategia);
 	}
 
 	/**
@@ -123,7 +128,7 @@ public class EstrategiaDescuentoService {
 		
 		DescuentoPorcentaje descuento = (DescuentoPorcentaje) estrategia;
 		descuento.setPorcentaje(nuevoPorcentaje);
-		estrategiaDAO.actualizar(descuento);
+		porcentajeRepository.save(descuento);
 	}
 
 	/**
@@ -139,7 +144,7 @@ public class EstrategiaDescuentoService {
 		
 		DescuentoFijo descuento = (DescuentoFijo) estrategia;
 		descuento.setMontoFijo(nuevoMonto);
-		estrategiaDAO.actualizar(descuento);
+		fijoRepository.save(descuento);
 	}
 
 	/**
@@ -148,7 +153,7 @@ public class EstrategiaDescuentoService {
 	public void activarEstrategia(int id) {
 		EstrategiaDescuento estrategia = consultarPorId(id);
 		estrategia.setActiva(true);
-		estrategiaDAO.actualizar(estrategia);
+		estrategiaRepository.save(estrategia);
 	}
 
 	/**
@@ -157,7 +162,7 @@ public class EstrategiaDescuentoService {
 	public void desactivarEstrategia(int id) {
 		EstrategiaDescuento estrategia = consultarPorId(id);
 		estrategia.setActiva(false);
-		estrategiaDAO.actualizar(estrategia);
+		estrategiaRepository.save(estrategia);
 	}
 
 	/**
@@ -165,7 +170,7 @@ public class EstrategiaDescuentoService {
 	 */
 	public void eliminarEstrategia(int id) {
 		EstrategiaDescuento estrategia = consultarPorId(id);
-		estrategiaDAO.eliminar(estrategia);
+		estrategiaRepository.delete(estrategia);
 	}
 
 	private void validarNombre(String nombre) {

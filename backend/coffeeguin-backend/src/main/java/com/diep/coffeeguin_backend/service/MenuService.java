@@ -1,6 +1,6 @@
 package com.diep.coffeeguin_backend.service;
 
-import com.diep.coffeeguin_backend.dao.CategoriaDAO;
+import com.diep.coffeeguin_backend.repository.CategoriaRepository;
 import com.diep.coffeeguin_backend.model.Categoria;
 import com.diep.coffeeguin_backend.model.Menu;
 import com.diep.coffeeguin_backend.model.Producto;
@@ -11,11 +11,11 @@ import java.util.List;
 @Service
 public class MenuService {
 
-	private final CategoriaDAO categoriaDAO;
+	private final CategoriaRepository categoriaRepository;
 	private final ProductoService productoService;
 
-	public MenuService(CategoriaDAO categoriaDAO, ProductoService productoService) {
-		this.categoriaDAO = categoriaDAO;
+	public MenuService(CategoriaRepository categoriaRepository, ProductoService productoService) {
+		this.categoriaRepository = categoriaRepository;
 		this.productoService = productoService;
 	}
 
@@ -52,6 +52,6 @@ public class MenuService {
 	}
 
 	public List<Categoria> consultarCategorias() {
-		return categoriaDAO.listarTodos();
+		return categoriaRepository.findAll();
 	}
 }
