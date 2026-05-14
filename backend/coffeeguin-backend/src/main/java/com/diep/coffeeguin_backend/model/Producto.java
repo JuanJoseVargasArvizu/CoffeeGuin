@@ -1,11 +1,13 @@
 package com.diep.coffeeguin_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "tipo", visible = true)
 @JsonSubTypes({
@@ -26,19 +28,19 @@ public abstract class Producto {
 	private String nombre;
 	private double precio;
 	private String descripcion;
-	@Transient
-	private List<Ingrediente> ingredientes;
 	private String tipo;
 	@ManyToOne
     @JoinColumn(name = "categoria_id")
 	private Categoria categoria;
 
+	@OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@JsonIgnore
+	private List<ProductoReceta> lineasReceta = new ArrayList<>();
+
 	protected Producto() {
-		this.ingredientes = new ArrayList<>();
 	}
 
 	protected Producto(String tipo) {
-		this();
 		this.tipo = tipo;
 	}
 
@@ -75,11 +77,28 @@ public abstract class Producto {
 	}
 
 	public List<Ingrediente> getIngredientes() {
-		return ingredientes;
+		return lineasReceta.stream()
+				.map(ProductoReceta::getIngrediente)
+				.collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	public void setIngredientes(List<Ingrediente> ingredientes) {
-		this.ingredientes = ingredientes != null ? ingredientes : new ArrayList<>();
+		lineasReceta.clear();
+		if (ingredientes == null) {
+			return;
+		}
+		for (Ingrediente ing : ingredientes) {
+			if (ing == null) {
+				continue;
+			}
+			ProductoReceta linea = new ProductoReceta(this, ing);
+			lineasReceta.add(linea);
+		}
+	}
+
+	@JsonIgnore
+	public List<ProductoReceta> getLineasReceta() {
+		return lineasReceta;
 	}
 
 	public String getTipo() {

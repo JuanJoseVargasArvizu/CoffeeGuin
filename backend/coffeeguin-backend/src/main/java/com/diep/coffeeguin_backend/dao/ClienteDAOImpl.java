@@ -3,6 +3,7 @@ package com.diep.coffeeguin_backend.dao;
 import com.diep.coffeeguin_backend.db.DBConnection;
 import com.diep.coffeeguin_backend.model.Cliente;
 import com.diep.coffeeguin_backend.model.EstrategiaDescuento;
+import com.diep.coffeeguin_backend.dao.EstrategiaDescuentoDAO;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -20,9 +21,11 @@ import java.util.NoSuchElementException;
 public class ClienteDAOImpl implements ClienteDAO {
 
 	private final DBConnection dbConnection;
+	private final EstrategiaDescuentoDAO estrategiaDAO;
 
-	public ClienteDAOImpl(DBConnection dbConnection) {
+	public ClienteDAOImpl(DBConnection dbConnection, EstrategiaDescuentoDAO estrategiaDAO) {
 		this.dbConnection = dbConnection;
+		this.estrategiaDAO = estrategiaDAO;
 		crearTablaSiNoExiste();
 	}
 
@@ -31,7 +34,7 @@ public class ClienteDAOImpl implements ClienteDAO {
 		String sql = "INSERT INTO cliente (nombre, email, telefono, direccion, preferencias, alergias, bebida_favorita, plato_favorito, estrategia_descuento_id, fecha_registro, fecha_actualizacion, activo) " +
 				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try (Connection connection = dbConnection.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			 PreparedStatement statement = connection.prepareStatement(sql, new String[] { "id" })) {
 			
 			statement.setString(1, cliente.getNombre());
 			statement.setString(2, cliente.getEmail());
@@ -57,7 +60,7 @@ public class ClienteDAOImpl implements ClienteDAO {
 			
 			try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
 				if (generatedKeys.next()) {
-					cliente.setId(generatedKeys.getInt(1));
+					cliente.setId(generatedKeys.getInt("id"));
 				}
 			}
 		} catch (SQLException exception) {
@@ -239,10 +242,17 @@ public class ClienteDAOImpl implements ClienteDAO {
 			? resultSet.getTimestamp("fecha_actualizacion").toLocalDateTime() 
 			: null);
 		cliente.setActivo(resultSet.getBoolean("activo"));
-		
-		// La estrategia de descuento no se carga aquí para evitar consultas N+1
-		// Se puede cargar bajo demanda si es necesario
-		
+
+		// Cargar estrategia de descuento si existe (soportar int4 y bigint)
+		Object estrategiaObj = resultSet.getObject("estrategia_descuento_id");
+		if (estrategiaObj != null) {
+			long estrategiaId = ((Number) estrategiaObj).longValue();
+			EstrategiaDescuento estrategia = estrategiaDAO.buscarPorId((int) estrategiaId);
+			if (estrategia != null) {
+				cliente.setEstrategiaDescuento(estrategia);
+			}
+		}
+
 		return cliente;
 	}
 

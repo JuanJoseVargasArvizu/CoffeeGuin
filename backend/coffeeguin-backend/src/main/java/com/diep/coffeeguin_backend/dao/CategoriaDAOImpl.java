@@ -26,12 +26,12 @@ public class CategoriaDAOImpl implements CategoriaDAO {
 	public void agregar(Categoria categoria) {
 		String sql = "INSERT INTO categoria (nombre) VALUES (?)";
 		try (Connection connection = dbConnection.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			 PreparedStatement statement = connection.prepareStatement(sql, new String[] { "id" })) {
 			statement.setString(1, categoria.getNombre());
 			statement.executeUpdate();
 			try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
 				if (generatedKeys.next()) {
-					categoria.setId(generatedKeys.getLong(1));
+					categoria.setId(generatedKeys.getLong("id"));
 				}
 			}
 		} catch (SQLException exception) {

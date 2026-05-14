@@ -1,7 +1,6 @@
 package com.diep.coffeeguin_backend.service;
 
 import com.diep.coffeeguin_backend.dao.CategoriaDAO;
-import com.diep.coffeeguin_backend.dao.ProductoDAO;
 import com.diep.coffeeguin_backend.model.Categoria;
 import com.diep.coffeeguin_backend.model.Menu;
 import com.diep.coffeeguin_backend.model.Producto;
@@ -13,11 +12,11 @@ import java.util.List;
 public class MenuService {
 
 	private final CategoriaDAO categoriaDAO;
-	private final ProductoDAO productoDAO;
+	private final ProductoService productoService;
 
-	public MenuService(CategoriaDAO categoriaDAO, ProductoDAO productoDAO) {
+	public MenuService(CategoriaDAO categoriaDAO, ProductoService productoService) {
 		this.categoriaDAO = categoriaDAO;
-		this.productoDAO = productoDAO;
+		this.productoService = productoService;
 	}
 
 	public Menu consultarMenu() {
@@ -25,11 +24,11 @@ public class MenuService {
 	}
 
 	public List<Producto> consultarPorCategoria(Categoria c) {
-		return productoDAO.listarPorCategoriaDisponibles(c);
+		return productoService.listarDisponiblesPorCategoria(c);
 	}
 
 	public Producto buscarProductoEnMenu(int id) {
-		Producto producto = productoDAO.buscarPorId(id);
+		Producto producto = productoService.buscarPorId(id);
 		if (producto != null && !(producto instanceof com.diep.coffeeguin_backend.model.Ingrediente)) {
 			if (!tieneIngredientesDisponibles(producto)) {
 				return null;

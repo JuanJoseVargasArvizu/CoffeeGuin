@@ -1,9 +1,9 @@
 package com.diep.coffeeguin_backend.controller;
 
 import com.diep.coffeeguin_backend.dao.ReporteDAO;
-import com.diep.coffeeguin_backend.dao.VentaDAO;
 import com.diep.coffeeguin_backend.model.Reporte;
 import com.diep.coffeeguin_backend.model.Venta;
+import com.diep.coffeeguin_backend.service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +19,7 @@ public class ReporteController {
     private ReporteDAO reporteDAO;
 
     @Autowired
-    private VentaDAO ventaDAO;
+    private VentaService ventaService;
 
     // reportes hechos anteriormente
     @GetMapping
@@ -46,7 +46,7 @@ public class ReporteController {
                 throw new IllegalArgumentException("Tipo inválido. Usa: diario, semanal o mensual");
         }
 
-        List<Venta> todasLasVentas = ventaDAO.findAll();
+        List<Venta> todasLasVentas = ventaService.listarTodas();
         List<Venta> ventasDelPeriodo = new ArrayList<>();
         double totalDinero = 0.0;
 

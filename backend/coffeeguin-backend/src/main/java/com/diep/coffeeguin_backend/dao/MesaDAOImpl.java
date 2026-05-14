@@ -22,12 +22,14 @@ public class MesaDAOImpl implements MesaDAO {
     @Override
     @Transactional
     public Mesa save(Mesa mesa) {
-        if (mesa.getId() == null || mesa.getId() == 0){
+        if (mesa.getId() != null && mesa.getId() == 0) {
+            mesa.setId(null);
+        }
+        if (mesa.getId() == null) {
             entityManager.persist(mesa);
             return mesa;
-        } else {
-            return entityManager.merge(mesa);
         }
+        return entityManager.merge(mesa);
     }
 
     @Override

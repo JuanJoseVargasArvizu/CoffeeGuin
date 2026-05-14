@@ -6,8 +6,9 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity 
-@Table(name = "ingrediente") 
+@Entity
+@Table(name = "ingrediente")
+@PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
 public class Ingrediente extends Producto {
 
     @Column(nullable = false) 

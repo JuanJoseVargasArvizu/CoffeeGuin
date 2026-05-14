@@ -31,6 +31,11 @@ public class ProductoReceta {
 	public ProductoReceta(Producto producto, Ingrediente ingrediente) {
 		this.producto = producto;
 		this.ingrediente = ingrediente;
+		// Inicializar el ID embebido con base en las relaciones
+		// Esto será actualizado por Hibernate cuando se persista
+		if (producto != null && ingrediente != null) {
+			this.id = new ProductoRecetaId(producto.getId(), ingrediente.getId());
+		}
 	}
 
 	public ProductoRecetaId getId() {

@@ -1,6 +1,7 @@
 package com.diep.coffeeguin_backend.service;
 
 import com.diep.coffeeguin_backend.dao.ClienteDAO;
+import com.diep.coffeeguin_backend.model.DescuentoPorcentaje;
 import com.diep.coffeeguin_backend.model.Cliente;
 import com.diep.coffeeguin_backend.model.EstrategiaDescuento;
 import org.springframework.stereotype.Service;
