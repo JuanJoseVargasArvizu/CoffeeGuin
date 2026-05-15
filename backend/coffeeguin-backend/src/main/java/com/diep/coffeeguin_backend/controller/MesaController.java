@@ -1,7 +1,7 @@
 package com.diep.coffeeguin_backend.controller;
 
-import com.diep.coffeeguin_backend.dao.MesaDAO;
 import com.diep.coffeeguin_backend.model.Mesa;
+import com.diep.coffeeguin_backend.repository.MesaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,12 +12,12 @@ import java.util.List;
 public class MesaController {
 
     @Autowired
-    private MesaDAO mesaDAO;
+    private MesaRepository mesaRepository;
 
     // obtiene todas las mesas 
     @GetMapping
     public List<Mesa> obtenerTodasLasMesas() {
-        return mesaDAO.findAll();
+        return mesaRepository.findAll();
     }
 
     // da alta a una nueva mesa en el sistema 
@@ -26,19 +26,18 @@ public class MesaController {
         if (nuevaMesa.getEstado() == null || nuevaMesa.getEstado().isEmpty()) {
             nuevaMesa.setEstado("Libre");
         }
-        return mesaDAO.save(nuevaMesa);
+        return mesaRepository.save(nuevaMesa);
     }
 
     // cambia el estado de una mesa 
     @PutMapping("/{id}/estado")
     public Mesa actualizarEstadoMesa(@PathVariable Integer id, @RequestParam String nuevoEstado) {
-        Mesa mesaExistente = mesaDAO.findById(id);
+        Mesa mesaExistente = mesaRepository.findById(id).orElse(null);
         
         if (mesaExistente != null) {
             mesaExistente.setEstado(nuevoEstado);
-            return mesaDAO.save(mesaExistente);
+            return mesaRepository.save(mesaExistente);
         }
         return null; 
     }
 }
-

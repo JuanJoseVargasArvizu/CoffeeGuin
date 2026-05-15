@@ -1,8 +1,8 @@
 package com.diep.coffeeguin_backend.controller;
 
-import com.diep.coffeeguin_backend.dao.ReporteDAO;
 import com.diep.coffeeguin_backend.model.Reporte;
 import com.diep.coffeeguin_backend.model.Venta;
+import com.diep.coffeeguin_backend.repository.ReporteRepository;
 import com.diep.coffeeguin_backend.service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,16 +16,16 @@ import java.util.List;
 public class ReporteController {
 
     @Autowired
-    private ReporteDAO reporteDAO;
+    private ReporteRepository reporteRepository;
 
     @Autowired
     private VentaService ventaService;
 
-    // reportes hechos anteriormente
     @GetMapping
     public List<Reporte> obtenerTodosLosReportes() {
-        return reporteDAO.findAll();
+        return reporteRepository.findAll();
     }
+    
     // genera informes diarios, semanales o mensuales 
     @PostMapping("/generar")
     public Reporte generarReportePorPeriodo(@RequestParam String tipo) {
@@ -64,6 +64,7 @@ public class ReporteController {
         nuevoReporte.setTotalCalculado(totalDinero);
         nuevoReporte.setVentas(ventasDelPeriodo); 
         nuevoReporte.setObservaciones("Reporte generado automáticamente. Total de tickets: " + ventasDelPeriodo.size());
-        return reporteDAO.save(nuevoReporte);
+        
+        return reporteRepository.save(nuevoReporte);
     }
 }
