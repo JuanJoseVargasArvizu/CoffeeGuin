@@ -155,12 +155,6 @@ Esquema `IngredienteSimple`:
 { "id": integer, "nombre": string, "stockActual": number }
 ```
 
-Esquema `IngredienteConCantidad`:
-
-```json
-{ "id": integer, "nombre": string, "cantidad": number, "stockActual": number }
-```
-
 Esquema `ProductoDetail`:
 
 ```json
@@ -175,22 +169,6 @@ Esquema `ProductoDetail`:
 }
 ```
 
-Esquema `ProductoDetailConReceta`:
-
-```json
-{
-  "id": integer,
-  "nombre": string,
-  "precio": number,
-  "descripcion": string | null,
-  "tipo": string,
-  "categoria": { "id": integer, "nombre": string } | null,
-  "lineasReceta": [
-    { "ingrediente": { "id": integer, "nombre": string }, "cantidad": number }
-  ]
-}
-```
-
 - GET `/productos`
   - Response `200 OK`: `ProductoDetail[]`
 
@@ -199,22 +177,6 @@ Esquema `ProductoDetailConReceta`:
 
 - POST `/productos`
   - Request: `ProductoCreate` (subset of `ProductoDetail` without `id`)
-  - Ejemplo con ingredientes y cantidades:
-
-```json
-{
-  "nombre": "Café con Leche",
-  "precio": 45.00,
-  "descripcion": "Café con leche caliente",
-  "tipo": "bebida",
-  "categoria": { "id": 1 },
-  "lineasReceta": [
-    { "id": { "ingredienteId": 1 }, "ingrediente": { "id": 1 }, "cantidad": 30.0 },
-    { "id": { "ingredienteId": 2 }, "ingrediente": { "id": 2 }, "cantidad": 200.0 }
-  ]
-}
-```
-
   - Response `201 Created`: `ProductoDetail` | `400`
 
 - DELETE `/productos` (body con id)
@@ -225,24 +187,7 @@ Esquema `ProductoDetailConReceta`:
   - Response `204 No Content` | `404`
 
 - PUT `/productos`
-  - Request: `ProductoDetail` (con `id`) incluyendo ingredientes con cantidad
-  - Ejemplo:
-
-```json
-{
-  "id": 1,
-  "nombre": "Café con Leche Actualizado",
-  "precio": 50.00,
-  "descripcion": "Café con leche de mejor calidad",
-  "tipo": "bebida",
-  "categoria": { "id": 1 },
-  "lineasReceta": [
-    { "id": { "ingredienteId": 1 }, "ingrediente": { "id": 1 }, "cantidad": 40.0 },
-    { "id": { "ingredienteId": 2 }, "ingrediente": { "id": 2 }, "cantidad": 250.0 }
-  ]
-}
-```
-
+  - Request: `ProductoDetail` (con `id`)
   - Response `200 OK`: `ProductoDetail` | `400` | `404`
 
 ---

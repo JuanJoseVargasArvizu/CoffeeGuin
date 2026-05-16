@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 export interface Mesa {
   id?: number;
+  numero: number;  
   estado: string;
 }
 
@@ -13,7 +14,7 @@ export interface Mesa {
 })
 export class MesaService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/mesas`;
+  private apiUrl = `${environment.apiUrl}/api/mesas`;
 
   list(): Observable<Mesa[]> {
     return this.http.get<Mesa[]>(this.apiUrl);

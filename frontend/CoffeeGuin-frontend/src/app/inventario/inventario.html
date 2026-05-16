@@ -112,8 +112,20 @@
     <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header"><h3>{{ mesaForm.id ? 'Actualizar Estado' : 'Nueva Mesa' }}</h3></div>
         <form (ngSubmit)="saveMesa()">
+            
             <div class="field" *ngIf="!mesaForm.id">
-                <p>Se creará una nueva mesa con estado inicial "Libre".</p>
+                <label>Número de Mesa</label>
+                <input 
+                    type="number" 
+                    class="search" 
+                    [(ngModel)]="mesaForm.numero" 
+                    name="numero" 
+                    placeholder="Ej. 1, 2, 3..." 
+                    min="1"
+                    required />
+                <p style="font-size: 12px; color: #666; margin-top: 4px;">
+                    Se creará con el estado inicial "Libre".
+                </p>
             </div>
             
             <div class="field" *ngIf="mesaForm.id">
@@ -285,14 +297,34 @@
 				</div>
 
 				<div class="field">
-					<label>Ingredientes</label>
-					<div class="ingredients-list" style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;border-radius:6px">
-						<label *ngFor="let ing of ingredientes" style="display:flex;align-items:center;gap:8px;padding:4px 0">
-							<input type="checkbox" [checked]="isIngredienteSelected(ing.id)" (change)="toggleIngrediente(ing.id, $event.target.checked)" />
+				<label>Ingredientes (Receta)</label>
+				<div class="ingredients-list" style="max-height:200px;overflow:auto;border:1px solid #eee;padding:8px;border-radius:6px">
+					<!-- Contenedor flex para alinear los elementos horizontalmente -->
+					<div *ngFor="let ing of ingredientes" style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #fafafa">
+						
+						<!-- Checkbox y Nombre -->
+						<label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer;flex-grow:1">
+							<input type="checkbox" [checked]="isIngredienteSelected(ing.id)" (change)="toggleIngrediente(ing.id, $any($event.target).checked)" />
 							<span>{{ ing.nombre || ('ID ' + ing.id) }}</span>
 						</label>
+
+						<!-- Input de cantidad: Solo aparece si el ingrediente está marcado -->
+						<div *ngIf="isIngredienteSelected(ing.id)" style="display:flex;align-items:center;gap:4px">
+							<input 
+								type="number" 
+								step="1" 
+								min="0"
+								placeholder="Cant." 
+								[(ngModel)]="productoForm.cantidadesIngredientes[ing.id]" 
+								name="cantidad_{{ing.id}}" 
+								style="width: 75px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: right;"
+								required />
+							<span style="font-size: 12px; color: #777;">Unidad</span>
+						</div>
+
 					</div>
 				</div>
+			</div>
 			</div>
 
 			<div *ngIf="productoForm.tipo === 'ingrediente'">

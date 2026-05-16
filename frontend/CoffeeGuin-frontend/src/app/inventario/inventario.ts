@@ -25,10 +25,19 @@ export class InventarioComponent implements OnInit {
   clientes: Cliente[] = [];
   mesas: Mesa[] = [];
   showMesaModal = false;
-  mesaForm: any = { estado: 'Libre' };
+  mesaForm: any = { numero: null, estado: 'Libre' };
 
   categoriaForm: any = { nombre: '' };
-  productoForm: any = { nombre: '', precio: 0, tipo: null, categoriaId: null, stockActual: 0, umbralAlerta: 0, ingredienteIds: [] };
+  productoForm: any = { 
+    nombre: '', 
+    precio: 0, 
+    tipo: null, 
+    categoriaId: null, 
+    stockActual: 0, 
+    umbralAlerta: 0, 
+    ingredienteIds: [],
+    cantidadesIngredientes: {}
+  };  
   clienteForm: any = { nombre: '', email: '', telefono: '', direccion: '', preferencias: '', alergias: '', bebidaFavorita: '', platoFavorito: '', activa: true };
 
   showCategoriaModal = false;
@@ -62,13 +71,13 @@ export class InventarioComponent implements OnInit {
 
   // Métodos para Mesas
   openMesaModal(newOne = false) {
-    if (newOne) this.mesaForm = { estado: 'Libre' };
+    if (newOne) this.mesaForm = { numero: null, estado: 'Libre' };
     this.showMesaModal = true;
   }
 
   closeMesaModal() {
     this.showMesaModal = false;
-    this.mesaForm = { estado: 'Libre' };
+    this.mesaForm = { numero: null, estado: 'Libre' };
   }
 
   saveMesa() {
@@ -111,12 +120,30 @@ export class InventarioComponent implements OnInit {
   }
 
   startEditProducto(p: Producto) {
-    this.productoForm = { ...p, tipo: (p as any).tipo ?? null, precio: (p as any).precio ?? 0, categoriaId: p.categoria?.id ?? p.categoria, ingredienteIds: (p as any).ingredientes ? (p as any).ingredientes.map((i: any) => i.id ?? i) : [] };
+    const lineas = (p as any).lineasReceta || [];
+    const ingredienteIds = lineas.map((linea: any) => linea.id?.ingredienteId || linea.ingrediente?.id);
+    
+    const cantidadesIngredientes: { [key: number]: number } = {};
+    lineas.forEach((linea: any) => {
+      const ingId = linea.id?.ingredienteId || linea.ingrediente?.id;
+      if (ingId) {
+        cantidadesIngredientes[ingId] = linea.cantidad || 0;
+      }
+    });
+
+    this.productoForm = { 
+      ...p, 
+      tipo: (p as any).tipo ?? null, 
+      precio: (p as any).precio ?? 0, 
+      categoriaId: p.categoria?.id ?? p.categoria, 
+      ingredienteIds: ingredienteIds,
+      cantidadesIngredientes: cantidadesIngredientes
+    };
     this.openProductoModal();
   }
 
   cancelProducto() {
-    this.productoForm = { nombre: '', precio: 0, tipo: null, categoriaId: null, stockActual: 0, umbralAlerta: 0, ingredienteIds: [] };
+    this.productoForm = { nombre: '', precio: 0, tipo: null, categoriaId: null, stockActual: 0, umbralAlerta: 0, ingredienteIds: [], cantidadesIngredientes: {} };
   }
 
   openProductoModal(newOne = false) {
@@ -126,7 +153,7 @@ export class InventarioComponent implements OnInit {
 
   closeProductoModal() {
     this.showProductoModal = false;
-    this.productoForm = { nombre: '', precio: 0, tipo: null, categoriaId: null, stockActual: 0, umbralAlerta: 0, ingredienteIds: [] };
+    this.productoForm = { nombre: '', precio: 0, tipo: null, categoriaId: null, stockActual: 0, umbralAlerta: 0, ingredienteIds: [], cantidadesIngredientes: {} };
   }
 
   setProductoTipo(t: string) {
@@ -144,10 +171,16 @@ export class InventarioComponent implements OnInit {
 
   toggleIngrediente(id: number, checked: boolean) {
     if (!this.productoForm.ingredienteIds) this.productoForm.ingredienteIds = [];
+    if (!this.productoForm.cantidadesIngredientes) this.productoForm.cantidadesIngredientes = {};
+
     if (checked) {
-      if (!this.productoForm.ingredienteIds.includes(id)) this.productoForm.ingredienteIds.push(id);
+      if (!this.productoForm.ingredienteIds.includes(id)) {
+        this.productoForm.ingredienteIds.push(id);
+        this.productoForm.cantidadesIngredientes[id] = 0.0; // Cantidad inicial por defecto
+      }
     } else {
       this.productoForm.ingredienteIds = this.productoForm.ingredienteIds.filter((x: any) => x !== id);
+      delete this.productoForm.cantidadesIngredientes[id]; // Eliminamos el rastro de cantidad
     }
   }
 
@@ -163,17 +196,36 @@ export class InventarioComponent implements OnInit {
         tipo: 'ingrediente',
         precio: 0,
         categoria: this.productoForm.categoriaId ? { id: this.productoForm.categoriaId } : null,
-        ingredientes: [],
+        lineasReceta: [], 
         stockActual: this.productoForm.stockActual ?? 0,
         umbralAlerta: this.productoForm.umbralAlerta ?? 0
       };
     } else {
+      // Id del producto actual (si es edición usa el ID real, si es creación usamos 0 o null como placeholder)
+      const actualProductoId = this.productoForm.id || 0;
+
+      // Construimos el arreglo con el formato exacto que Postman validó con éxito
+      const lineasReceta = (this.productoForm.ingredienteIds || []).map((id: number) => {
+        const cantidadAsignada = Number(this.productoForm.cantidadesIngredientes[id] || 0.0);
+        return {
+          id: { 
+            productoId: actualProductoId, // Mapeo de la llave compuesta productoId
+            ingredienteId: id             // Mapeo de la llave compuesta ingredienteId
+          },
+          ingrediente: { 
+            id: id,
+            tipo: 'ingrediente' // <-- INDISPENSABLE: Evita el HttpMessageNotReadableException de Jackson
+          },
+          cantidad: cantidadAsignada
+        };
+      });
+
       payload = {
         nombre: this.productoForm.nombre,
         precio: this.productoForm.precio ?? 0,
         tipo: this.productoForm.tipo,
         categoria: this.productoForm.categoriaId ? { id: this.productoForm.categoriaId } : null,
-        ingredientes: (this.productoForm.ingredienteIds && this.productoForm.ingredienteIds.length > 0) ? (this.productoForm.ingredienteIds || []).map((id: number) => ({ id, tipo: 'ingrediente' })) : null,
+        lineasReceta: lineasReceta.length > 0 ? lineasReceta : [],
         stockActual: this.productoForm.stockActual ?? 0,
         umbralAlerta: this.productoForm.umbralAlerta ?? 0
       };
@@ -181,15 +233,20 @@ export class InventarioComponent implements OnInit {
 
     if (this.productoForm.id) {
       payload.id = this.productoForm.id;
-      this.productoService.update(payload).subscribe(() => this.loadAll());
+      this.productoService.update(payload).subscribe({
+        next: () => this.loadAll(),
+        error: (err) => console.error('Error al actualizar producto:', err)
+      });
     } else {
-      this.productoService.create(payload).subscribe(() => this.loadAll());
+      this.productoService.create(payload).subscribe({
+        next: () => this.loadAll(),
+        error: (err) => console.error('Error al crear producto:', err)
+      });
     }
 
     this.cancelProducto();
     this.closeProductoModal();
   }
-
   delProducto(p: Producto) {
     if (!confirm('Eliminar producto?')) return;
     if (p.id) {

@@ -4,6 +4,8 @@ import com.diep.coffeeguin_backend.model.Categoria;
 import com.diep.coffeeguin_backend.model.Ingrediente;
 import com.diep.coffeeguin_backend.model.Producto;
 import com.diep.coffeeguin_backend.model.ProductoReceta;
+import com.diep.coffeeguin_backend.model.ProductoRecetaId;
+import com.diep.coffeeguin_backend.model.IngredienteCantidad;
 import com.diep.coffeeguin_backend.repository.CategoriaRepository;
 import com.diep.coffeeguin_backend.repository.IngredienteRepository;
 import com.diep.coffeeguin_backend.repository.ProductoRepository;
@@ -34,7 +36,7 @@ public class ProductoService {
 	public void registrarNuevoProducto(Producto p) {
 		p.setId(null);
 		resolverCategoria(p);
-		resolverIngredientesDeReceta(p);
+		resolverIngredientesDeRecetaParaNuevo(p);
 		productoRepository.save(p);
 	}
 
@@ -75,8 +77,8 @@ public class ProductoService {
 			exIng.setUmbralAlerta(px.getUmbralAlerta());
 		}
 
-		resolverIngredientesDeReceta(p);
-		existente.setIngredientes(p.getIngredientes());
+		// Procesar ingredientes con cantidad
+		resolverIngredientesDeRecetaConCantidad(existente, p);
 		productoRepository.save(existente);
 	}
 
@@ -133,5 +135,51 @@ public class ProductoService {
 			refs.add(ingredienteRepository.getReferenceById(ing.getId()));
 		}
 		p.setIngredientes(refs);
+	}
+
+	private void resolverIngredientesDeRecetaParaNuevo(Producto p) {
+		if (p.getLineasReceta() == null || p.getLineasReceta().isEmpty()) {
+			return;
+		}
+		
+		// Procesar cada línea de receta
+		for (ProductoReceta linea : p.getLineasReceta()) {
+			if (linea == null || linea.getId() == null || linea.getId().getIngredienteId() == null) {
+				continue;
+			}
+			
+			Long ingredienteId = linea.getId().getIngredienteId();
+			
+			// Obtener la referencia del ingrediente
+			Ingrediente ingrediente = ingredienteRepository.getReferenceById(ingredienteId);
+			linea.setIngrediente(ingrediente);
+			linea.setProducto(p);
+		}
+	}
+
+	private void resolverIngredientesDeRecetaConCantidad(Producto existente, Producto nuevo) {
+		// Limpiar las líneas de receta existentes
+		existente.getLineasReceta().clear();
+		
+		if (nuevo.getLineasReceta() == null || nuevo.getLineasReceta().isEmpty()) {
+			return;
+		}
+		
+		// Procesar cada línea de receta del nuevo producto
+		for (ProductoReceta linea : nuevo.getLineasReceta()) {
+			if (linea == null || linea.getId() == null || linea.getId().getIngredienteId() == null) {
+				continue;
+			}
+			
+			Long ingredienteId = linea.getId().getIngredienteId();
+			Double cantidad = linea.getCantidad();
+			
+			// Obtener la referencia del ingrediente
+			Ingrediente ingrediente = ingredienteRepository.getReferenceById(ingredienteId);
+			
+			// Crear una nueva línea de receta con la cantidad
+			ProductoReceta nuevaLinea = new ProductoReceta(existente, ingrediente, cantidad);
+			existente.getLineasReceta().add(nuevaLinea);
+		}
 	}
 }

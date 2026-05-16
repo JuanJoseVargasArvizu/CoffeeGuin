@@ -34,7 +34,6 @@ public abstract class Producto {
 	private Categoria categoria;
 
 	@OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-	@JsonIgnore
 	private List<ProductoReceta> lineasReceta = new ArrayList<>();
 
 	protected Producto() {
@@ -76,6 +75,7 @@ public abstract class Producto {
 		this.descripcion = descripcion;
 	}
 
+	@JsonIgnore
 	public List<Ingrediente> getIngredientes() {
 		return lineasReceta.stream()
 				.map(ProductoReceta::getIngrediente)
@@ -83,6 +83,35 @@ public abstract class Producto {
 	}
 
 	public void setIngredientes(List<Ingrediente> ingredientes) {
+		setIngredientesConCantidad(ingredientes, null);
+	}
+
+	public void setIngredientesConCantidad(List<?> ingredientes) {
+		lineasReceta.clear();
+		if (ingredientes == null) {
+			return;
+		}
+		for (Object obj : ingredientes) {
+			if (obj == null) {
+				continue;
+			}
+			if (obj instanceof Ingrediente ing) {
+				ProductoReceta linea = new ProductoReceta(this, ing, 0.0);
+				lineasReceta.add(linea);
+			} else if (obj instanceof IngredienteCantidad ingCant) {
+				if (ingCant.getId() == null) {
+					continue;
+				}
+				// El ingrediente será resuelto por el servicio
+				// Por ahora creamos un placeholder que será reemplazado
+				ProductoReceta linea = new ProductoReceta(this, null, ingCant.getCantidad());
+				linea.setId(new ProductoRecetaId(this.id, ingCant.getId()));
+				lineasReceta.add(linea);
+			}
+		}
+	}
+
+	private void setIngredientesConCantidad(List<Ingrediente> ingredientes, Void unused) {
 		lineasReceta.clear();
 		if (ingredientes == null) {
 			return;
@@ -91,12 +120,12 @@ public abstract class Producto {
 			if (ing == null) {
 				continue;
 			}
-			ProductoReceta linea = new ProductoReceta(this, ing);
+			ProductoReceta linea = new ProductoReceta(this, ing, 0.0);
 			lineasReceta.add(linea);
 		}
 	}
 
-	@JsonIgnore
+
 	public List<ProductoReceta> getLineasReceta() {
 		return lineasReceta;
 	}
