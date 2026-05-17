@@ -25,7 +25,7 @@ export class InventarioComponent implements OnInit {
   clientes: Cliente[] = [];
   mesas: Mesa[] = [];
   showMesaModal = false;
-  mesaForm: any = { numero: null, estado: 'Libre' };
+  mesaForm: any = { numero: null, estado: 'Libre', cantidadAsientos: null };
 
   categoriaForm: any = { nombre: '' };
   productoForm: any = { 
@@ -71,13 +71,13 @@ export class InventarioComponent implements OnInit {
 
   // Métodos para Mesas
   openMesaModal(newOne = false) {
-    if (newOne) this.mesaForm = { numero: null, estado: 'Libre' };
+    if (newOne) this.mesaForm = { numero: null, estado: 'Libre', cantidadAsientos: null };
     this.showMesaModal = true;
   }
 
   closeMesaModal() {
     this.showMesaModal = false;
-    this.mesaForm = { numero: null, estado: 'Libre' };
+    this.mesaForm = { numero: null, estado: 'Libre', cantidadAsientos: null };
   }
 
   saveMesa() {

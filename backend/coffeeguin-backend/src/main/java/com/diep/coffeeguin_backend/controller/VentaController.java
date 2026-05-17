@@ -1,15 +1,17 @@
 package com.diep.coffeeguin_backend.controller;
 
+import com.diep.coffeeguin_backend.dto.VentaDetalleDTO;
+import com.diep.coffeeguin_backend.dto.VentaResumenDTO;
+import com.diep.coffeeguin_backend.model.Venta;
 import com.diep.coffeeguin_backend.model.VentaMesaRequest;
 import com.diep.coffeeguin_backend.model.VentaMesaResponse;
-import com.diep.coffeeguin_backend.model.Venta;
 import com.diep.coffeeguin_backend.service.VentaMesaService;
 import com.diep.coffeeguin_backend.service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -23,12 +25,17 @@ public class VentaController {
     private VentaMesaService ventaMesaService;
 
     @GetMapping
-    public List<Venta> obtenerHistorial(
+    public List<VentaResumenDTO> obtenerHistorial(
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
-        return ventaService.listarPorPeriodo(inicio, fin);
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        return ventaService.listarResumenPorPeriodo(fechaInicio, fechaFin);
+    }
+
+    @GetMapping("/{id}/detalle")
+    public List<VentaDetalleDTO> obtenerDetalleVenta(@PathVariable Integer id) {
+        return ventaService.listarDetalleVenta(id);
     }
 
     @PostMapping

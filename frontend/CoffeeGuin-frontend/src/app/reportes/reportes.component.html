@@ -1,0 +1,263 @@
+<main class="reportes-shell">
+  <section class="reportes-hero panel-surface">
+    <div>
+      <p class="eyebrow">CoffeeGuin / Reportes</p>
+      <h1>Panel financiero y analítica operativa</h1>
+      <p class="hero-copy">
+        Consulta ventas, detalles y reportes financieros de la cafeteria.
+      </p>
+    </div>
+
+    <div class="hero-chip">
+      <span class="chip-label">Rango activo</span>
+      <strong>{{ historialFechaInicio }} → {{ historialFechaFin }}</strong>
+    </div>
+  </section>
+
+  <nav class="tabs" aria-label="Secciones de reportes">
+    <button type="button" class="tab-btn" [class.active]="pestanaActiva === 'historial'" (click)="cambiarPestana('historial')">
+      Historial
+    </button>
+    <button type="button" class="tab-btn" [class.active]="pestanaActiva === 'pdfs'" (click)="cambiarPestana('pdfs')">
+      PDFs
+    </button>
+    <button type="button" class="tab-btn" [class.active]="pestanaActiva === 'analitica'" (click)="cambiarPestana('analitica')">
+      Analítica
+    </button>
+  </nav>
+
+  <section *ngIf="pestanaActiva === 'historial'" class="panel-surface tab-panel">
+    <header class="panel-header">
+      <div>
+        <h2>Historial de ventas</h2>
+        <p>Lista filtrada por fecha con acceso al detalle de cada venta.</p>
+      </div>
+
+      <button type="button" class="primary-btn" (click)="cargarHistorialVentas()" [disabled]="historialCargando">
+        {{ historialCargando ? 'Cargando...' : 'Buscar ventas' }}
+      </button>
+    </header>
+
+    <div class="filters-grid">
+      <label class="field">
+        <span>Fecha inicio</span>
+        <input type="date" [(ngModel)]="historialFechaInicio" />
+      </label>
+
+      <label class="field">
+        <span>Fecha fin</span>
+        <input type="date" [(ngModel)]="historialFechaFin" />
+      </label>
+    </div>
+
+    <div *ngIf="historialCargando" class="state-box loading-box">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Cargando ventas del periodo seleccionado...</span>
+    </div>
+
+    <div *ngIf="historialError" class="state-box error-box">{{ historialError }}</div>
+
+    <div *ngIf="!historialCargando && historialVentas.length > 0" class="table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Venta</th>
+            <th>Fecha</th>
+            <th>Contexto</th>
+            <th>Subtotal</th>
+            <th>Total final</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let venta of historialVentas">
+            <td>#{{ venta.idVenta }}</td>
+            <td>{{ venta.fecha | date : 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ etiquetaVenta(venta) }}</td>
+            <td>{{ venta.subtotal | currency : 'MXN' : 'symbol-narrow' : '1.2-2' : 'es-MX' }}</td>
+            <td class="total-highlight">{{ venta.totalFinal | currency : 'MXN' : 'symbol-narrow' : '1.2-2' : 'es-MX' }}</td>
+            <td>
+              <button type="button" class="ghost-btn" (click)="abrirDetalle(venta)">Ver detalle</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="!historialCargando && !historialError && historialVentas.length === 0" class="empty-box">
+      No hay ventas para el rango seleccionado.
+    </div>
+  </section>
+
+  <section *ngIf="pestanaActiva === 'pdfs'" class="panel-surface tab-panel">
+    <header class="panel-header">
+      <div>
+        <h2>Descarga de PDFs</h2>
+        <p>Genera el reporte financiero y guárdalo directamente en el equipo.</p>
+      </div>
+
+      <div *ngIf="pdfCargando" class="loading-inline">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Preparando archivo...</span>
+      </div>
+    </header>
+
+    <div class="pdf-actions">
+      <button type="button" class="report-action daily" (click)="descargarReporte('DIARIO')" [disabled]="pdfCargando">
+        Diario
+      </button>
+      <button type="button" class="report-action weekly" (click)="descargarReporte('SEMANAL')" [disabled]="pdfCargando">
+        Semanal
+      </button>
+      <button type="button" class="report-action monthly" (click)="descargarReporte('MENSUAL')" [disabled]="pdfCargando">
+        Mensual
+      </button>
+    </div>
+
+    <div *ngIf="pdfError" class="state-box error-box">{{ pdfError }}</div>
+  </section>
+
+  <section *ngIf="pestanaActiva === 'analitica'" class="panel-surface tab-panel">
+    <header class="panel-header">
+      <div>
+        <h2>Analítica</h2>
+        <p>Vista rapida de analitica de la cafeteria</p>
+      </div>
+
+      <button type="button" class="primary-btn" (click)="cargarAnalitica()" [disabled]="analiticaCargando">
+        {{ analiticaCargando ? 'Generando...' : 'Actualizar analítica' }}
+      </button>
+    </header>
+
+    <div class="filters-grid analytics-filters">
+      <label class="field">
+        <span>Fecha inicio</span>
+        <input type="date" [(ngModel)]="analiticaFechaInicio" />
+      </label>
+
+      <label class="field">
+        <span>Fecha fin</span>
+        <input type="date" [(ngModel)]="analiticaFechaFin" />
+      </label>
+
+      <label class="field">
+        <span>Criterio</span>
+        <select [(ngModel)]="analiticaCriterio" (ngModelChange)="cargarAnalitica()">
+          <option value="PRODUCTO">Producto</option>
+          <option value="CATEGORIA">Categoría</option>
+        </select>
+      </label>
+    </div>
+
+    <div *ngIf="analiticaCargando" class="state-box loading-box">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Cargando analítica...</span>
+    </div>
+
+    <div *ngIf="analiticaError" class="state-box error-box">{{ analiticaError }}</div>
+
+    <ng-container *ngIf="!analiticaCargando">
+      <div *ngIf="(analitica?.labels?.length ?? 0) > 0; else sinDatosAnalitica" class="analytics-chart-shell">
+        <div class="analytics-chart-metrics">
+          <div class="metric-card">
+            <span>Total unidades</span>
+            <strong>{{ totalUnidadesPeriodo }}</strong>
+          </div>
+
+          <div class="metric-card">
+            <span>Criterio activo</span>
+            <strong>{{ analiticaCriterio === 'PRODUCTO' ? 'Producto' : 'Categoría' }}</strong>
+          </div>
+        </div>
+
+        <div class="analytics-chart" role="list" aria-label="Gráfica de barras verticales de analítica">
+          <article
+            class="analytics-column"
+            role="listitem"
+            *ngFor="let label of analitica?.labels; let i = index"
+            [class.long-label]="esEtiquetaLarga(label)"
+          >
+            <div class="analytics-bar-zone">
+              <div class="analytics-tooltip">
+                <span class="tooltip-label">{{ label }}</span>
+                <span>
+                  Cantidad:
+                  <strong>{{ cantidadAnalitica(i) }}</strong>
+                </span>
+                <span>
+                  Ingresos:
+                  <strong>
+                    {{ ingresosAnalitica(i) | currency : 'MXN' : 'symbol-narrow' : '1.2-2' : 'es-MX' }}
+                  </strong>
+                </span>
+              </div>
+
+              <div
+                class="analytics-bar"
+                [style.height.%]="alturaBarra(i)"
+                [attr.aria-label]="label + ', cantidad ' + cantidadAnalitica(i)"
+                [title]="label + ' | Cantidad: ' + cantidadAnalitica(i)"
+              ></div>
+            </div>
+
+            <div class="analytics-label" [class.rotated]="esEtiquetaLarga(label)">
+              {{ label }}
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <ng-template #sinDatosAnalitica>
+        <div class="empty-box">No hay datos para mostrar en el periodo seleccionado.</div>
+      </ng-template>
+    </ng-container>
+  </section>
+</main>
+
+<div *ngIf="detalleAbierto" class="modal-backdrop" (click)="cerrarDetalle()">
+  <article class="modal-card" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div>
+        <p class="eyebrow">Detalle de venta</p>
+        <h3>#{{ ventaSeleccionada?.idVenta }}</h3>
+        <p class="modal-subtitle">{{ ventaSeleccionada?.fecha | date : 'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="cerrarDetalle()" aria-label="Cerrar modal">×</button>
+    </header>
+
+    <div *ngIf="detalleCargando" class="state-box loading-box modal-state">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Cargando desglose...</span>
+    </div>
+
+    <div *ngIf="detalleError" class="state-box error-box modal-state">{{ detalleError }}</div>
+
+    <ng-container *ngIf="!detalleCargando && detalleVenta.length > 0">
+      <div class="detail-summary">
+        <span>{{ etiquetaVenta(ventaSeleccionada!) }}</span>
+        <strong>{{ ventaSeleccionada?.totalFinal | currency : 'MXN' : 'symbol-narrow' : '1.2-2' : 'es-MX' }}</strong>
+      </div>
+
+      <div class="detail-list">
+        <div class="detail-row detail-head">
+          <span>Producto</span>
+          <span>Cant.</span>
+          <span>Unitario</span>
+          <span>Importe</span>
+        </div>
+
+        <div class="detail-row" *ngFor="let item of detalleVenta">
+          <span class="detail-product">{{ item.nombreProducto }}</span>
+          <span>{{ item.cantidad }}</span>
+          <span>{{ item.precioUnitario | currency : 'MXN' : 'symbol-narrow' : '1.2-2' : 'es-MX' }}</span>
+          <span class="total-highlight">{{ item.cantidad * item.precioUnitario| currency : 'MXN' : 'symbol-narrow' : '1.2-2' : 'es-MX' }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <div *ngIf="!detalleCargando && !detalleError && detalleVenta.length === 0" class="empty-box modal-state">
+      La venta no tiene productos registrados.
+    </div>
+  </article>
+</div>
