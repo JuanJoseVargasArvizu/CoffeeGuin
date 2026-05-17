@@ -60,7 +60,7 @@ public class VentaMesaService {
 			throw new IllegalArgumentException("La mesaId es obligatoria");
 		}
 
-		List<ProductoMesa> pendientes = productoMesaRepository.findByMesa_IdAndEstadoPago(request.getMesaId(), "pendiente");
+		List<ProductoMesa> pendientes = productoMesaRepository.findByMesaIdAndEstadoPago(request.getMesaId().longValue(), "pendiente");
 		if (pendientes.isEmpty()) {
 			throw new IllegalStateException("No hay productos pendientes para cobrar en esta mesa");
 		}
@@ -139,6 +139,7 @@ public class VentaMesaService {
 		ventaDetalleRepository.saveAll(detalles);
 
 		for (ProductoMesa pedido : pendientes) {
+			pedido.setVenta(ventaGuardada);
 			pedido.setEstadoPago("pagado");
 		}
 		productoMesaRepository.saveAll(pendientes);

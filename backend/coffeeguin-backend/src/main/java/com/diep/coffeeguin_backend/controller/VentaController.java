@@ -6,8 +6,10 @@ import com.diep.coffeeguin_backend.model.Venta;
 import com.diep.coffeeguin_backend.service.VentaMesaService;
 import com.diep.coffeeguin_backend.service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,8 +23,12 @@ public class VentaController {
     private VentaMesaService ventaMesaService;
 
     @GetMapping
-    public List<Venta> obtenerHistorial() {
-        return ventaService.listarTodas();
+    public List<Venta> obtenerHistorial(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
+        return ventaService.listarPorPeriodo(inicio, fin);
     }
 
     @PostMapping

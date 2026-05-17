@@ -2,29 +2,33 @@ package com.diep.coffeeguin_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "productos_mesa")
 public class ProductoMesa {
 
-	@EmbeddedId
-	private ProductoMesaId id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id_pedido_producto")
+	private Integer idPedidoProducto;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@MapsId("mesaId")
 	@JoinColumn(name = "idmesa", nullable = false)
 	@JsonIgnore
 	private Mesa mesa;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@MapsId("productoId")
 	@JoinColumn(name = "idproducto", nullable = false)
 	@JsonIgnore
 	private Producto producto;
@@ -35,15 +39,30 @@ public class ProductoMesa {
 	@Column(name = "estado_pago", nullable = false, length = 20)
 	private String estadoPago;
 
+	@Column(name = "creado_at", nullable = false, updatable = false)
+	private LocalDateTime creadoAt;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "venta_id")
+	@JsonIgnore
+	private Venta venta;
+
 	public ProductoMesa() {
 	}
 
-	public ProductoMesaId getId() {
-		return id;
+	@PrePersist
+	public void prePersist() {
+		if (creadoAt == null) {
+			creadoAt = LocalDateTime.now();
+		}
 	}
 
-	public void setId(ProductoMesaId id) {
-		this.id = id;
+	public Integer getIdPedidoProducto() {
+		return idPedidoProducto;
+	}
+
+	public void setIdPedidoProducto(Integer idPedidoProducto) {
+		this.idPedidoProducto = idPedidoProducto;
 	}
 
 	public Mesa getMesa() {
@@ -76,5 +95,21 @@ public class ProductoMesa {
 
 	public void setEstadoPago(String estadoPago) {
 		this.estadoPago = estadoPago;
+	}
+
+	public LocalDateTime getCreadoAt() {
+		return creadoAt;
+	}
+
+	public void setCreadoAt(LocalDateTime creadoAt) {
+		this.creadoAt = creadoAt;
+	}
+
+	public Venta getVenta() {
+		return venta;
+	}
+
+	public void setVenta(Venta venta) {
+		this.venta = venta;
 	}
 }

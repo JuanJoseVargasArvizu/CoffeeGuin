@@ -36,6 +36,20 @@ public class VentaService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<Venta> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fin) {
+		if (inicio != null && fin != null) {
+			return ventaRepository.findByFechaBetween(inicio, fin);
+		}
+		if (inicio != null) {
+			return ventaRepository.findByFechaGreaterThanEqual(inicio);
+		}
+		if (fin != null) {
+			return ventaRepository.findByFechaLessThanEqual(fin);
+		}
+		return ventaRepository.findAll();
+	}
+
+	@Transactional(readOnly = true)
 	public Venta buscarPorId(Integer id) {
 		return ventaRepository.findById(id)
 				.orElseThrow(() -> new NoSuchElementException("No existe una venta con id " + id));

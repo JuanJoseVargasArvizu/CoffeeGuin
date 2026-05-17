@@ -4,7 +4,6 @@ import com.diep.coffeeguin_backend.model.Mesa;
 import com.diep.coffeeguin_backend.model.PedidoMesaRequest;
 import com.diep.coffeeguin_backend.model.Producto;
 import com.diep.coffeeguin_backend.model.ProductoMesa;
-import com.diep.coffeeguin_backend.model.ProductoMesaId;
 import com.diep.coffeeguin_backend.model.PedidoMesaPendientesResponse;
 import com.diep.coffeeguin_backend.model.ProductoPendienteMesaResponse;
 import com.diep.coffeeguin_backend.model.ProductoPedidoMesaRequest;
@@ -88,7 +87,6 @@ public class PedidoMesaService {
 					.orElse(null);
 
 			ProductoMesa registro = registroExistente != null ? registroExistente : new ProductoMesa();
-			registro.setId(new ProductoMesaId(mesa.getId(), producto.getId()));
 			registro.setMesa(mesa);
 			registro.setProducto(producto);
 			registro.setCantidad(registroExistente != null ? registroExistente.getCantidad() + cantidad : cantidad);
