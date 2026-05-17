@@ -1,183 +1,287 @@
-<h1>Tienda</h1>
+<h1>Pedidos</h1>
 
 <div *ngIf="error" class="error">{{ error }}</div>
 
-<div class="pedido-layout">
-    <div class="pedido-main">
+<ng-container *ngIf="!selectedMesa; else vistaMesaActiva">
+  <section class="mesas-section">
+    <div class="section-heading">
+      <div>
+        <h2>Mesas actuales</h2>
+        <p class="section-subtitle">Selecciona una mesa para abrir o continuar la comanda.</p>
+      </div>
+      <button class="secondary-btn" type="button" (click)="loadAll()">Actualizar</button>
+    </div>
+
+    <div *ngIf="loadingMesas" class="loading">Cargando mesas...</div>
+
+    <div class="grid mesas-grid" *ngIf="!loadingMesas && mesas.length > 0">
+      <article
+        *ngFor="let mesa of mesas"
+        class="mesa-card"
+        [class.libre]="mesa.estado === 'Libre'"
+        [class.ocupada]="mesa.estado === 'Ocupada'"
+      >
+        <div class="mesa-card-header">
+          <div>
+            <div class="mesa-label">Mesa {{ etiquetaMesa(mesa) }}</div>
+            <div class="mesa-meta">Estado actual</div>
+          </div>
+          <span class="mesa-status">{{ mesa.estado }}</span>
+        </div>
+
+        <button
+          class="mesa-action"
+          type="button"
+          (click)="mesa.estado === 'Libre' ? abrirMesa(mesa) : seleccionarMesaParaComanda(mesa)"
+        >
+          {{ mesa.estado === 'Libre' ? 'Ocupar mesa' : 'Ordenar' }}
+        </button>
+      </article>
+    </div>
+
+    <p *ngIf="!loadingMesas && mesas.length === 0" class="no-products">No hay mesas disponibles.</p>
+  </section>
+</ng-container>
+
+<ng-template #vistaMesaActiva>
+  <ng-container *ngIf="selectedMesa as mesaActiva">
+    <div class="mesa-banner">
+      <div>
+        <span class="mesa-kicker">Mesa seleccionada</span>
+        <h2>Mesa {{ etiquetaMesa(mesaActiva) }}</h2>
+        <p>Flujo activo para comandas, precuenta y cobro.</p>
+      </div>
+
+      <div class="mesa-banner-actions">
+        <button class="secondary-btn" type="button" (click)="volverAlMapaDeMesas()">Volver a mesas</button>
+        <button class="checkout-btn compact" type="button" (click)="abrirModalCobro()">Finalizar venta</button>
+      </div>
+    </div>
+
+    <div class="pedido-layout">
+      <div class="pedido-main">
         <section class="categories-section" *ngIf="categorias.length > 0">
-            <h2>Categorías</h2>
-            <div class="grid">
-                <button 
-                    *ngFor="let c of categorias" 
-                    class="category-btn"
-                    [class.active]="selectedCategoryId === c.id"
-                    (click)="selectCategory(c.id!)">
-                    <!-- geometric icon per category -->
-                    <ng-container [ngSwitch]="c.icon">
-                        <svg *ngSwitchCase="'circle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
-                        <svg *ngSwitchCase="'square'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
-                        <svg *ngSwitchCase="'triangle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,5 19,19 5,19" fill="currentColor"/></svg>
-                        <svg *ngSwitchCase="'hexagon'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,4 18,7 18,13 12,16 6,13 6,7" fill="currentColor"/></svg>
-                        <svg *ngSwitchDefault class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>
-                    </ng-container>
-                    <div class="btn-label">{{ c.nombre }}</div>
-                </button>
+          <div class="section-heading">
+            <div>
+              <h2>Categorías</h2>
+              <p class="section-subtitle">Elige una categoría para agregar productos a la comanda nueva.</p>
             </div>
+          </div>
+
+          <div class="grid">
+            <button
+              *ngFor="let c of categorias"
+              class="category-btn"
+              [class.active]="selectedCategoryId === c.id"
+              type="button"
+              (click)="selectCategory(c.id!)"
+            >
+              <ng-container [ngSwitch]="c.icon">
+                <svg *ngSwitchCase="'circle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor" /></svg>
+                <svg *ngSwitchCase="'square'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" /></svg>
+                <svg *ngSwitchCase="'triangle'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,5 19,19 5,19" fill="currentColor" /></svg>
+                <svg *ngSwitchCase="'hexagon'" class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,4 18,7 18,13 12,16 6,13 6,7" fill="currentColor" /></svg>
+                <svg *ngSwitchDefault class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="currentColor" /></svg>
+              </ng-container>
+              <div class="btn-label">{{ c.nombre }}</div>
+            </button>
+          </div>
         </section>
 
         <section class="products-section" *ngIf="selectedCategoryId !== null">
-            <h2>Productos</h2>
-            <div *ngIf="loadingProductos" class="loading">Cargando productos...</div>
-            <div class="grid" *ngIf="!loadingProductos && productos.length > 0">
-                <div *ngFor="let p of productos" class="product-card" [class.unavailable]="p.disponible === false">
-                    <div class="product-main">
-                        <div class="product-top">
-                            <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                <path fill="currentColor" d="M2,21H20V19H2V21M20,8H18V5H20V8M20,8V10A2,2 0 0,1 18,12H16V13A2,2 0 0,1 14,15H6A2,2 0 0,1 4,13V5H16V3H2V13A4,4 0 0,0 6,17H14A4,4 0 0,0 18,13V12H20A2,2 0 0,0 22,10V8A2,2 0 0,0 20,8M9,2V4H11V2H9M13,2V4H15V2H13M5,2V4H7V2H5Z" />
-                            </svg>
-                            <div>
-                                <div class="product-name">{{ p.nombre }}</div>
-                                <div class="product-price" *ngIf="p.precio">$ {{ p.precio }}</div>
-                                <div *ngIf="p.disponible === false" class="unavailable-badge">No disponible</div>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="add-btn" title="Agregar" (click)="addToOrder(p)" [disabled]="p.disponible === false" [class.disabled]="p.disponible === false">+</button>
-                </div>
+          <div class="section-heading">
+            <div>
+              <h2>Productos</h2>
+              <p class="section-subtitle">Agrega productos a la comanda temporal de la mesa.</p>
             </div>
-            <p *ngIf="!loadingProductos && productos.length === 0" class="no-products">No hay productos en esta categoría.</p>
+          </div>
+
+          <div *ngIf="loadingMenu" class="loading">Cargando productos...</div>
+
+          <div class="grid" *ngIf="!loadingMenu && productos.length > 0">
+            <div *ngFor="let p of productos" class="product-card" [class.unavailable]="p.disponible === false">
+              <div class="product-main">
+                <div class="product-top">
+                  <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M2,21H20V19H2V21M20,8H18V5H20V8M20,8V10A2,2 0 0,1 18,12H16V13A2,2 0 0,1 14,15H6A2,2 0 0,1 4,13V5H16V3H2V13A4,4 0 0,0 6,17H14A4,4 0 0,0 18,13V12H20A2,2 0 0,0 22,10V8A2,2 0 0,0 20,8M9,2V4H11V2H9M13,2V4H15V2H13M5,2V4H7V2H5Z" />
+                  </svg>
+                  <div>
+                    <div class="product-name">{{ p.nombre }}</div>
+                    <div class="product-price" *ngIf="p.precio">$ {{ p.precio }}</div>
+                    <div *ngIf="p.disponible === false" class="unavailable-badge">No disponible</div>
+                  </div>
+                </div>
+              </div>
+              <button
+                class="add-btn"
+                type="button"
+                title="Agregar"
+                (click)="agregarProductoAComandaTemporal(p, 1)"
+                [disabled]="p.disponible === false"
+                [class.disabled]="p.disponible === false"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <p *ngIf="!loadingMenu && productos.length === 0" class="no-products">No hay productos en esta categoría.</p>
         </section>
-    </div>
+      </div>
 
-    <aside class="pedido-sidebar">
-        <h3>Pedido actual</h3>
-        <div *ngIf="pedidoActual.length === 0" class="empty">No hay productos añadidos.</div>
-        <ul class="order-list" *ngIf="pedidoActual.length > 0">
-            <li *ngFor="let item of pedidoActual; let i = index" class="order-item"
-                    [style.transform]="'translate(' + (i * 6) + 'px,' + (i * 4) + 'px)'"
-                    [style.zIndex]="1000 - i">
-                <div class="order-item-left">
-                    <div class="order-name">{{ item.producto.nombre }}</div>
-                    <div class="order-qty">Cantidad: {{ item.cantidad }}</div>
-                </div>
-                <div class="order-item-right">
-                    <div class="order-sub">$ {{ (item.producto.precio ?? 0) * item.cantidad }}</div>
-                    <button class="small" (click)="removeFromOrder(item.producto)">-</button>
-                </div>
+      <aside class="pedido-sidebar">
+        <div class="sidebar-section">
+          <h3>Precuenta actual</h3>
+          <div *ngIf="!cuentaMesaData?.productos?.length" class="empty">Sin productos pendientes.</div>
+          <ul class="order-list" *ngIf="cuentaMesaData?.productos?.length">
+            <li *ngFor="let item of cuentaMesaData?.productos" class="order-item">
+              <div class="order-item-left">
+                <div class="order-name">{{ nombrePendiente(item) }}</div>
+                <div class="order-qty">Cantidad: {{ cantidadPendiente(item) }}</div>
+              </div>
+              <div class="order-item-right">
+                <div class="order-sub">$ {{ subtotalPendiente(item) }}</div>
+              </div>
             </li>
-        </ul>
-        <div class="order-total" *ngIf="pedidoActual.length > 0">
-            <div>Total</div>
-            <div class="total-amount">$ {{ total }}</div>
+          </ul>
+          <div class="order-total" *ngIf="cuentaMesaData?.productos?.length">
+            <div>Total pendiente</div>
+            <div class="total-amount">$ {{ totalPendienteMesa }}</div>
+          </div>
         </div>
 
-        <!-- BOTÓN DE FINALIZAR COMPRA -->
-        <button class="checkout-btn" 
-                *ngIf="pedidoActual.length > 0" 
-                (click)="openCheckout()">
-            Finalizar Compra
-        </button>
-    </aside>
+        <div class="sidebar-section">
+          <h3>Comanda nueva</h3>
+          <div *ngIf="comandaNueva.length === 0" class="empty">No hay productos añadidos.</div>
+          <ul class="order-list" *ngIf="comandaNueva.length > 0">
+            <li *ngFor="let item of comandaNueva; let i = index" class="order-item" [style.transform]="'translate(' + (i * 6) + 'px,' + (i * 4) + 'px)'" [style.zIndex]="1000 - i">
+              <div class="order-item-left">
+                <div class="order-name">{{ item.producto.nombre }}</div>
+                <div class="order-qty">Cantidad: {{ item.cantidad }}</div>
+              </div>
+              <div class="order-item-right">
+                <div class="order-sub">$ {{ subtotalComanda(item) }}</div>
+                <button class="small" type="button" (click)="quitarProductoDeComandaTemporal(item.producto)">-</button>
+              </div>
+            </li>
+          </ul>
+          <div class="order-total" *ngIf="comandaNueva.length > 0">
+            <div>Total comanda</div>
+            <div class="total-amount">$ {{ totalComandaNueva }}</div>
+          </div>
+
+          <button class="checkout-btn" type="button" [disabled]="comandaNueva.length === 0" (click)="enviarComandaABackend()">
+            Enviar comanda
+          </button>
+
+          <button class="checkout-btn secondary" type="button" (click)="abrirModalCobro()">
+            Finalizar venta
+          </button>
+        </div>
+      </aside>
+    </div>
+  </ng-container>
+</ng-template>
+
+<div class="modal-overlay" *ngIf="showCobroModal">
+  <div class="modal-content">
+    <h3>Finalizar venta</h3>
+    <hr />
+
+    <div class="form-group">
+      <label>Seleccionar cliente (opcional):</label>
+      <select [(ngModel)]="selectedClientId" (ngModelChange)="onClienteSeleccionadoChange()" class="select-cliente">
+        <option [ngValue]="null">-- Consumidor final --</option>
+        <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.nombre }} <span *ngIf="c.email">({{ c.email }})</span></option>
+      </select>
+    </div>
+
+    <div class="modal-actions modal-actions-top">
+      <button class="btn-cancel" type="button" (click)="cerrarModalCobro()">Cancelar</button>
+      <button class="btn-confirm" type="button" (click)="cobrarCuentaMesa(selectedClientId)">Finalizar venta</button>
+    </div>
+
+    <div class="resumen-pago">
+      <div class="resumen-row">
+        <span>Total pendiente:</span>
+        <span>$ {{ totalPendienteMesa }}</span>
+      </div>
+      <div class="resumen-row">
+        <span>Comanda nueva:</span>
+        <span>$ {{ totalComandaNueva }}</span>
+      </div>
+      <div class="resumen-row total-final">
+        <span>Total original:</span>
+        <span>$ {{ totalOriginalPreview }}</span>
+      </div>
+      <div class="resumen-row text-discount" *ngIf="montoDescuentoPreview > 0">
+        <span>Descuento cliente:</span>
+        <span>- $ {{ montoDescuentoPreview }}</span>
+      </div>
+      <div class="resumen-row total-final">
+        <span>Total con descuento:</span>
+        <span>$ {{ totalConDescuentoPreview }}</span>
+      </div>
+    </div>
+
+    <div class="breakdown-box">
+      <h4>Desglose de venta</h4>
+      <div *ngIf="!cuentaMesaData?.productos?.length && comandaNueva.length === 0" class="empty">No hay productos para mostrar.</div>
+      <div class="breakdown-list" *ngIf="cuentaMesaData?.productos?.length || comandaNueva.length > 0">
+        <div *ngFor="let item of cuentaMesaData?.productos" class="breakdown-row">
+          <span>{{ item.nombre }} x{{ item.cantidad }}</span>
+          <span>$ {{ item.subtotalEstimado }}</span>
+        </div>
+        <div *ngFor="let item of comandaNueva" class="breakdown-row">
+          <span>{{ item.producto.nombre }} x{{ item.cantidad }}</span>
+          <span>$ {{ subtotalComanda(item) }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<p *ngIf="!error && categorias.length === 0">No hay categorias en el menu.</p>
+<div class="modal-overlay" *ngIf="showTicketModal">
+  <div class="modal-content receipt-modal">
+    <h3>Recibo de venta</h3>
+    <p class="section-subtitle">Venta #{{ ventaFinalizada?.ventaId }} - {{ ventaFinalizada?.status }}</p>
 
-<!-- MODAL DE CHECKOUT -->
-<div class="modal-overlay" *ngIf="showModal">
-    <div class="modal-content">
-        <h3>Finalizar Compra</h3>
-        <hr>
-        
-        <div class="form-group">
-            <label>Seleccionar Cliente (Opcional):</label>
-            <select [(ngModel)]="selectedClientId" (change)="onClientChange()" class="select-cliente">
-                <option [ngValue]="null">-- Consumidor Final --</option>
-                <option *ngFor="let c of clientes" [value]="c.id">
-                    {{ c.nombre }} ({{ c.email }})
-                </option>
-            </select>
-        </div>
-
-        <div class="resumen-pago">
-            <div class="resumen-row">
-                <span>Total Original:</span>
-                <span>$ {{ total }}</span>
-            </div>
-            
-            <!-- Bloque si hay descuento -->
-            <div *ngIf="calculoDescuento" class="descuento-info">
-                <div class="resumen-row text-discount">
-                    <span>Descuento aplicado:</span>
-                    <span>- $ {{ calculoDescuento.montoDescuento }}</span>
-                </div>
-                <div class="resumen-row total-final">
-                    <span>Total a Pagar:</span>
-                    <span>$ {{ calculoDescuento.totalConDescuento }}</span>
-                </div>
-            </div>
-
-            <!-- Bloque si no hay descuento (Consumidor final) -->
-            <div *ngIf="!calculoDescuento" class="resumen-row total-final">
-                <span>Total a Pagar:</span>
-                <span>$ {{ total }}</span>
-            </div>
-        </div>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" (click)="closeModal()">Cancelar</button>
-            <button class="btn-confirm" (click)="confirmarPedido()">Confirmar y Pagar</button>
-        </div>
+    <div class="resumen-pago">
+      <div class="resumen-row">
+        <span>Mesa:</span>
+        <span>{{ etiquetaMesa(selectedMesa!) }}</span>
+      </div>
+      <div class="resumen-row">
+        <span>Cliente:</span>
+        <span>{{ clienteSeleccionado?.nombre || 'Consumidor final' }}</span>
+      </div>
+      <div class="resumen-row">
+        <span>Total original:</span>
+        <span>$ {{ ventaFinalizada?.totalOriginal }}</span>
+      </div>
+      <div class="resumen-row text-discount" *ngIf="ventaFinalizada?.montoDescuento">
+        <span>Descuento:</span>
+        <span>- $ {{ ventaFinalizada?.montoDescuento }}</span>
+      </div>
+      <div class="resumen-row total-final">
+        <span>Total final:</span>
+        <span>$ {{ ventaFinalizada?.totalFinal }}</span>
+      </div>
     </div>
-</div>
 
-<div class="modal-overlay" *ngIf="showTicket">
-    <div class="ticket-container">
-        <div class="ticket-header">
-            <div class="logo-circle">☕</div>
-            <h2>CoffeeGuin</h2>
-            <p>Ticket de Venta #{{ ventaExitosa?.id }}</p>
-            <p class="ticket-date">{{ ventaExitosa?.fecha | date:'short' }}</p>
+    <div class="breakdown-box">
+      <h4>Detalle de venta</h4>
+      <div class="breakdown-list">
+        <div *ngFor="let item of ticketLineas" class="breakdown-row">
+          <span>{{ item.cantidad }}x {{ item.nombre }}</span>
+          <span>$ {{ item.subtotal }}</span>
         </div>
-        
-        <div class="ticket-body">
-            <div class="ticket-info">
-                <span>Mesa: {{ ventaExitosa?.mesa?.id }}</span>
-                <span>Atendido por: Sistema</span>
-            </div>
-            <div class="ticket-info" *ngIf="ventaExitosa?.cliente">
-                <span>Cliente: {{ ventaExitosa.cliente.nombre }}</span>
-            </div>
-            
-            <hr class="ticket-divider">
-            
-            <div class="ticket-items">
-                <div *ngFor="let p of pedidoActualBackup" class="ticket-item">
-                    <span>{{ p.cantidad }}x {{ p.producto.nombre }}</span>
-                    <span>$ {{ (p.producto.precio ?? 0) * p.cantidad }}</span>
-                </div>
-            </div>
-            
-            <hr class="ticket-divider">
-            
-            <div class="ticket-totals">
-                <div class="t-row">
-                    <span>Subtotal:</span>
-                    <span>$ {{ ventaExitosa?.subtotalCalculado }}</span>
-                </div>
-                <div class="t-row discount" *ngIf="ventaExitosa?.subtotalCalculado > ventaExitosa?.totalFinal">
-                    <span>Descuento:</span>
-                    <span>- $ {{ (ventaExitosa?.subtotalCalculado - ventaExitosa?.totalFinal).toFixed(2) }}</span>
-                </div>
-                <div class="t-row total">
-                    <span>TOTAL:</span>
-                    <span>$ {{ ventaExitosa?.totalFinal }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="ticket-footer">
-            <p>¡Gracias por su compra!</p>
-            <button class="btn-print" (click)="cerrarRecibo()">Cerrar</button>
-        </div>
+      </div>
     </div>
+
+    <div class="modal-actions">
+      <button class="btn-confirm" type="button" (click)="cerrarTicket()">Cerrar recibo</button>
+    </div>
+  </div>
 </div>

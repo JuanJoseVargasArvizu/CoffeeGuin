@@ -17,12 +17,18 @@ public class MesaService {
         return mesaRepository.findAll();
     }
 
+    public List<Mesa> obtenerTodasLasMesasConEstado(String estado) {
+        return mesaRepository.findByEstado(estado);
+    }
+
     public Mesa crearMesa(Mesa nuevaMesa) {
         if (nuevaMesa.getEstado() == null || nuevaMesa.getEstado().isEmpty()) {
             nuevaMesa.setEstado("Libre");
         }
         return mesaRepository.save(nuevaMesa);
     }
+
+
 
     public Mesa actualizarEstadoMesa(Integer id, String nuevoEstado) {
         Mesa mesaExistente = mesaRepository.findById(id).orElse(null);

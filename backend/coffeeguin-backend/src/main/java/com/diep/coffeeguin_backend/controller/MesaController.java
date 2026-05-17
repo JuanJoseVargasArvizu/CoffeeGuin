@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/mesas")
@@ -18,6 +21,11 @@ public class MesaController {
     public List<Mesa> obtenerTodasLasMesas() {
         return mesaService.obtenerTodasLasMesas();
     }
+    @GetMapping("/{estado}")
+    public List<Mesa> obtenerTodasLasMesasConEstado(@PathVariable String estado) {
+        return mesaService.obtenerTodasLasMesasConEstado(estado);
+    }
+    
 
     @PostMapping
     public Mesa crearMesa(@RequestBody Mesa nuevaMesa) {
@@ -28,4 +36,6 @@ public class MesaController {
     public Mesa actualizarEstadoMesa(@PathVariable Integer id, @RequestParam String nuevoEstado) {
         return mesaService.actualizarEstadoMesa(id, nuevoEstado);
     }
+
+    
 }

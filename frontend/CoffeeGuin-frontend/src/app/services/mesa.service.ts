@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 
@@ -20,11 +20,19 @@ export class MesaService {
     return this.http.get<Mesa[]>(this.apiUrl);
   }
 
+  listarPorEstado(estado: string): Observable<Mesa[]> {
+    return this.http.get<Mesa[]>(`${this.apiUrl}/${encodeURIComponent(estado)}`);
+  }
+
   create(mesa: Mesa): Observable<Mesa> {
     return this.http.post<Mesa>(this.apiUrl, mesa);
   }
 
-  actualizarEstado(id: number, nuevoEstado: string): Observable<Mesa> {
-    return this.http.put<Mesa>(`${this.apiUrl}/${id}/estado?nuevoEstado=${nuevoEstado}`, {});
+  actualizarEstado(id: number, estado: string): Observable<Mesa> {
+      // Configura el query param para que se vea como ?nuevoEstado=Ocupada
+      const params = new HttpParams().set('nuevoEstado', estado);
+
+      // El segundo argumento es el BODY. Como este endpoint no usa body, pasamos null.
+      return this.http.put<Mesa>(`${this.apiUrl}/${id}/estado`, null, { params });
   }
 }
