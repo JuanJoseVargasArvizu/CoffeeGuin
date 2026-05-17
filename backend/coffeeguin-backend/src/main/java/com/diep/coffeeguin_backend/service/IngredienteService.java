@@ -171,4 +171,9 @@ public class IngredienteService {
 		}
 		ingredienteRepository.deleteById(id);
 	}
+
+    @Transactional(readOnly = true)
+    public List<Ingrediente> obtenerAlertasDeStock() {
+        return ingredienteRepository.buscarIngredientesConBajoStock();
+    }
 }
