@@ -12,6 +12,24 @@
 .item-meta{display:flex;gap:8px;align-items:center}
 .item-qty{font-size:13px;color:#666}
 
+.stock-alerts-topbar{position:sticky;top:0;z-index:1500;margin-bottom:14px;padding:14px 16px;border:1px solid #e8a1a1;border-radius:14px;background:#f3b6b6;color:#6b1e1e;box-shadow:0 10px 24px rgba(107,30,30,.14)}
+.stock-alerts-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.stock-alerts-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stock-alerts-title{font-size:16px;font-weight:900;letter-spacing:.01em}
+.stock-alerts-count{font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.52);border:1px solid rgba(107,30,30,.12)}
+.stock-alerts-toggle{border:1px solid rgba(107,30,30,.18);border-radius:999px;padding:9px 14px;background:rgba(255,255,255,.62);color:#6b1e1e;cursor:pointer;font-weight:800;transition:transform .12s,background .12s}
+.stock-alerts-toggle:hover{transform:translateY(-1px);background:rgba(255,255,255,.8)}
+.stock-alerts-body{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.stock-alert-chip{flex:1 1 240px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.58);border:1px solid rgba(107,30,30,.1)}
+.stock-alert-name{font-weight:900;font-size:14px;color:#651f1f}
+.stock-alert-message{margin-top:4px;font-size:13px;line-height:1.35;color:#7a2727}
+
+.stock-alerts-topbar.minimized{padding:8px 16px;border-color:#e3a2a2;background:#f6c1c1}
+.stock-alerts-topbar.minimized .stock-alerts-body{display:none}
+.stock-alerts-topbar.minimized .stock-alerts-header{min-height:30px}
+
+.stock-alerts-topbar.minimized .stock-alerts-count{background:rgba(255,255,255,.66)}
+
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .form-inline{display:flex;gap:8px;margin-top:8px}
 .form{display:grid;gap:8px;margin-top:8px}
@@ -61,6 +79,8 @@
 	.cliente-card{flex-direction:column}
 	.card-actions{flex-direction:row;flex-wrap:wrap;width:100%;gap:8px}
 	.card-actions .small{flex:1 1 45%}
+	.stock-alerts-header{align-items:flex-start;flex-direction:column}
+	.stock-alerts-toggle{width:100%}
 }
 
 /* Estrategia modal tweaks */

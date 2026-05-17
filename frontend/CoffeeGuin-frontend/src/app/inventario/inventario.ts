@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Subscription, forkJoin, timer } from 'rxjs';
 import { CategoriaService, Categoria } from '../services/categoria.service';
-import { ProductoService, Producto } from '../services/producto.service';
+import { IngredienteAlerta, ProductoService, Producto } from '../services/producto.service';
 import { ClienteService, Cliente } from '../services/cliente.service';
 import { MesaService, Mesa } from '../services/mesa.service';
 
@@ -22,10 +23,13 @@ export class InventarioComponent implements OnInit {
   categorias: Categoria[] = [];
   productos: Producto[] = [];
   ingredientes: any[] = [];
+  alertasStock: IngredienteAlerta[] = [];
+  alertasMinimizadas = false;
   clientes: Cliente[] = [];
   mesas: Mesa[] = [];
   showMesaModal = false;
   mesaForm: any = { numero: null, estado: 'Libre', cantidadAsientos: null };
+  private alertasPolling?: Subscription;
 
   categoriaForm: any = { nombre: '' };
   productoForm: any = { 
@@ -53,6 +57,11 @@ export class InventarioComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAll();
+    this.alertasPolling = timer(60000, 60000).subscribe(() => this.cargarAlertasStock());
+  }
+
+  ngOnDestroy(): void {
+    this.alertasPolling?.unsubscribe();
   }
 
   loadAll(): void {
@@ -61,7 +70,19 @@ export class InventarioComponent implements OnInit {
     this.productoService.listIngredientes().subscribe({ next: (v: any) => (this.ingredientes = v || []), error: () => (this.ingredientes = []) });
     this.clienteService.list().subscribe({ next: (v: any) => (this.clientes = v || []), error: () => (this.clientes = []) });
     this.mesaService.list().subscribe({ next: (v) => (this.mesas = v || []), error: () => (this.mesas = []) });
+    this.cargarAlertasStock();
     this.loadEstrategias();
+  }
+
+  cargarAlertasStock(): void {
+    this.productoService.listarAlertasStockBajo().subscribe({
+      next: (v) => (this.alertasStock = v || []),
+      error: () => (this.alertasStock = []),
+    });
+  }
+
+  alternarAlertas(): void {
+    this.alertasMinimizadas = !this.alertasMinimizadas;
   }
 
   loadEstrategias() { this.clienteService.listEstrategias().subscribe({ next: (v: any) => (this.estrategias = v || []), error: () => (this.estrategias = []) }); }
@@ -81,17 +102,55 @@ export class InventarioComponent implements OnInit {
   }
 
   saveMesa() {
-    // El controlador solo tiene POST para crear y PUT para estado
     if (this.mesaForm.id) {
-        this.mesaService.actualizarEstado(this.mesaForm.id, this.mesaForm.estado).subscribe(() => this.loadAll());
+      const requests = [];
+
+      const cantidadAsientos = Number(this.mesaForm.cantidadAsientos ?? 0);
+      if (Number.isFinite(cantidadAsientos) && cantidadAsientos > 0 && cantidadAsientos !== Number(this.mesaForm.originalCantidadAsientos ?? 0)) {
+        requests.push(this.mesaService.actualizarAsientos(this.mesaForm.id, cantidadAsientos));
+      }
+
+      if (this.mesaForm.estado && this.mesaForm.estado !== this.mesaForm.originalEstado) {
+        requests.push(this.mesaService.actualizarEstado(this.mesaForm.id, this.mesaForm.estado));
+      }
+
+      if (requests.length === 0) {
+        this.closeMesaModal();
+        return;
+      }
+
+      forkJoin(requests).subscribe({
+        next: () => {
+          this.loadAll();
+          this.closeMesaModal();
+        },
+        error: (err) => console.error('Error al actualizar mesa:', err),
+      });
     } else {
-        this.mesaService.create(this.mesaForm).subscribe(() => this.loadAll());
+      const payload = {
+        numero: Number(this.mesaForm.numero),
+        estado: 'Libre',
+        cantidadAsientos: Number(this.mesaForm.cantidadAsientos ?? 0),
+      };
+
+      this.mesaService.create(payload as Mesa).subscribe({
+        next: () => {
+          this.loadAll();
+          this.closeMesaModal();
+        },
+        error: (err) => console.error('Error al crear mesa:', err),
+      });
     }
-    this.closeMesaModal();
   }
 
   startEditMesa(m: Mesa) {
-    this.mesaForm = { ...m };
+    const cantidadAsientos = this.cantidadAsientosMesa(m);
+    this.mesaForm = {
+      ...m,
+      cantidadAsientos,
+      originalCantidadAsientos: cantidadAsientos,
+      originalEstado: m.estado,
+    };
     this.showMesaModal = true;
   }
 
@@ -136,6 +195,7 @@ export class InventarioComponent implements OnInit {
       tipo: (p as any).tipo ?? null, 
       precio: (p as any).precio ?? 0, 
       categoriaId: p.categoria?.id ?? p.categoria, 
+      umbralAlerta: (p as any).umbralAlerta ?? 0,
       ingredienteIds: ingredienteIds,
       cantidadesIngredientes: cantidadesIngredientes
     };
@@ -162,6 +222,7 @@ export class InventarioComponent implements OnInit {
       this.productoForm.precio = 0;
       this.productoForm.ingredienteIds = [];
       this.productoForm.stockActual = this.productoForm.stockActual ?? 0;
+      this.productoForm.umbralAlerta = this.productoForm.umbralAlerta ?? 0;
     } else {
       this.productoForm.precio = this.productoForm.precio ?? 0;
       this.productoForm.ingredienteIds = this.productoForm.ingredienteIds ?? [];
@@ -193,10 +254,6 @@ export class InventarioComponent implements OnInit {
     if (this.productoForm.tipo === 'ingrediente') {
       payload = {
         nombre: this.productoForm.nombre,
-        tipo: 'ingrediente',
-        precio: 0,
-        categoria: this.productoForm.categoriaId ? { id: this.productoForm.categoriaId } : null,
-        lineasReceta: [], 
         stockActual: this.productoForm.stockActual ?? 0,
         umbralAlerta: this.productoForm.umbralAlerta ?? 0
       };
@@ -238,7 +295,11 @@ export class InventarioComponent implements OnInit {
         error: (err) => console.error('Error al actualizar producto:', err)
       });
     } else {
-      this.productoService.create(payload).subscribe({
+      const createRequest = this.productoForm.tipo === 'ingrediente'
+        ? this.productoService.createIngrediente(payload)
+        : this.productoService.create(payload);
+
+      createRequest.subscribe({
         next: () => this.loadAll(),
         error: (err) => console.error('Error al crear producto:', err)
       });
@@ -341,5 +402,9 @@ export class InventarioComponent implements OnInit {
     this.clienteService.precioDescuento(c.id, total).subscribe({ next: (res: any) => {
       alert(`Total original: ${res.totalOriginal}\nDescuento: ${res.montoDescuento}\nTotal con descuento: ${res.totalConDescuento}`);
     }, error: () => { alert('Error calculando descuento'); } });
+  }
+
+  cantidadAsientosMesa(mesa: Mesa): number {
+    return Number(mesa.cantidadAsientos ?? mesa.asientos?.length ?? 0);
   }
 }

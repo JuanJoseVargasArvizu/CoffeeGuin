@@ -10,6 +10,7 @@ export interface Mesa {
   numero: number;
   estado: EstadoMesa;
   cantidadAsientos: number;
+  asientos?: Array<{ numero: number; ocupado: boolean; id: number }>;
 }
 
 export interface ActualizarAsientosResponse {

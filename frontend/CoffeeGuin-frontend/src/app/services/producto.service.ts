@@ -5,6 +5,14 @@ import { environment } from '../../environments/environment';
 
 export interface Producto { id?: number; nombre: string; precio?: number; tipo?: string; categoria?: any; stockActual?: number; umbralAlerta?: number; disponible?: boolean }
 
+export interface IngredienteAlerta {
+  id: number;
+  nombre: string;
+  stockActual: number;
+  umbralMinimo: number;
+  mensaje: string;
+}
+
 export interface PendienteMesaProducto {
   productoId: number;
   nombre: string;
@@ -30,6 +38,14 @@ export class ProductoService {
 
   listIngredientes() {
     return this.http.get<any[]>(`${this.base}/productos/ingredientes`);
+  }
+
+  createIngrediente(payload: { nombre: string; stockActual: number; umbralAlerta: number }) {
+    return this.http.post<Producto>(`${this.base}/api/ingredientes`, payload);
+  }
+
+  listarAlertasStockBajo() {
+    return this.http.get<IngredienteAlerta[]>(`${this.base}/api/ingredientes/alertas`);
   }
 
   create(payload: any) {

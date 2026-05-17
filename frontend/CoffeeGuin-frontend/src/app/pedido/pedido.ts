@@ -431,6 +431,10 @@ export class PedidoComponent implements OnInit {
     return mesa.numero ?? mesa.id ?? '-';
   }
 
+  cantidadAsientosMesa(mesa: Mesa): number {
+    return Number(mesa.cantidadAsientos ?? mesa.asientos?.length ?? 0);
+  }
+
   nombrePendiente(item: any): string {
     return item?.nombre ?? 'Producto';
   }

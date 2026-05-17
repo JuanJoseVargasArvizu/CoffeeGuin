@@ -1,5 +1,25 @@
 <h1>Inventario</h1>
 
+<section class="stock-alerts-topbar" *ngIf="alertasStock.length > 0" [class.minimized]="alertasMinimizadas">
+	<div class="stock-alerts-header">
+		<div class="stock-alerts-heading">
+			<span class="stock-alerts-title">Alertas de stock bajo</span>
+			<span class="stock-alerts-count">{{ alertasStock.length }} activas</span>
+		</div>
+
+		<button type="button" class="stock-alerts-toggle" (click)="alternarAlertas()">
+			{{ alertasMinimizadas ? 'Mostrar' : 'Minimizar' }}
+		</button>
+	</div>
+
+	<div class="stock-alerts-body" *ngIf="!alertasMinimizadas">
+		<div *ngFor="let alerta of alertasStock" class="stock-alert-chip">
+			<div class="stock-alert-name">{{ alerta.nombre }}</div>
+			<div class="stock-alert-message">{{ alerta.mensaje }}</div>
+		</div>
+	</div>
+</section>
+
 <section class="panel">
 	<div style="display:flex;justify-content:space-between;align-items:center">
 		<h2>Categorías</h2>
@@ -97,12 +117,12 @@
         <div *ngFor="let m of mesas" class="item-card" [ngClass]="'mesa-' + m.estado.toLowerCase()">
             <div class="item-top">
                 <div>
-                    <div class="item-name">Mesa #{{ m.id }}</div>
-                    <div class="item-meta">Estado: {{ m.estado }}</div>
+	                    <div class="item-name">Mesa #{{ m.numero }}</div>
+	                    <div class="item-meta">Estado: {{ m.estado }} · Asientos: {{ cantidadAsientosMesa(m) }}</div>
                 </div>
             </div>
             <div style="margin-top:12px">
-                <button type="button" class="small edit-btn" (click)="startEditMesa(m)">Cambiar Estado</button>
+	                <button type="button" class="small edit-btn" (click)="startEditMesa(m)">Editar mesa</button>
             </div>
         </div>
     </div>
@@ -110,7 +130,7 @@
 
 <div class="modal-overlay" *ngIf="showMesaModal" (click)="closeMesaModal()">
     <div class="modal" (click)="$event.stopPropagation()">
-        <div class="modal-header"><h3>{{ mesaForm.id ? 'Actualizar Estado' : 'Nueva Mesa' }}</h3></div>
+		<div class="modal-header"><h3>{{ mesaForm.id ? 'Editar Mesa' : 'Nueva Mesa' }}</h3></div>
         <form (ngSubmit)="saveMesa()">
             
             <div class="field" *ngIf="!mesaForm.id">
@@ -140,6 +160,21 @@
 					required />
 				<p style="font-size: 12px; color: #666; margin-top: 4px;">
 					Este valor se enviará en el alta de la mesa.
+				</p>
+			</div>
+
+			<div class="field" *ngIf="mesaForm.id">
+				<label>Cantidad de asientos</label>
+				<input 
+					type="number" 
+					class="search" 
+					[(ngModel)]="mesaForm.cantidadAsientos" 
+					name="cantidadAsientosEdit" 
+					placeholder="Ej. 2, 4, 6..." 
+					min="1"
+					required />
+				<p style="font-size: 12px; color: #666; margin-top: 4px;">
+					Se actualizará con el endpoint de asientos.
 				</p>
 			</div>
             
@@ -351,6 +386,11 @@
 				<div class="field">
 					<label>Stock</label>
 					<input class="search" type="number" [(ngModel)]="productoForm.stockActual" name="stockActual" placeholder="Stock" />
+				</div>
+
+				<div class="field">
+					<label>Umbral de alerta</label>
+					<input class="search" type="number" [(ngModel)]="productoForm.umbralAlerta" name="umbralAlerta" placeholder="Umbral de alerta" />
 				</div>
 
 				<div class="field">
