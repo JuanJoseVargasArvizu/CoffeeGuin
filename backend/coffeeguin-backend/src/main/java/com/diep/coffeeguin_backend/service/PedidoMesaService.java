@@ -1,15 +1,21 @@
 package com.diep.coffeeguin_backend.service;
 
+import com.diep.coffeeguin_backend.model.Ingrediente;
 import com.diep.coffeeguin_backend.model.Mesa;
 import com.diep.coffeeguin_backend.model.PedidoMesaRequest;
+import com.diep.coffeeguin_backend.model.PedidoMesaStockInsuficienteResponse;
 import com.diep.coffeeguin_backend.model.Producto;
 import com.diep.coffeeguin_backend.model.ProductoMesa;
 import com.diep.coffeeguin_backend.model.PedidoMesaPendientesResponse;
+import com.diep.coffeeguin_backend.model.ProductoStockInsuficienteDTO;
 import com.diep.coffeeguin_backend.model.ProductoPendienteMesaResponse;
 import com.diep.coffeeguin_backend.model.ProductoPedidoMesaRequest;
+import com.diep.coffeeguin_backend.model.ProductoReceta;
+import com.diep.coffeeguin_backend.model.IngredienteStockInsuficienteDTO;
 import com.diep.coffeeguin_backend.repository.MesaRepository;
 import com.diep.coffeeguin_backend.repository.ProductoMesaRepository;
 import com.diep.coffeeguin_backend.repository.ProductoRepository;
+import com.diep.coffeeguin_backend.exception.StockIngredientesInsuficienteException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +32,16 @@ public class PedidoMesaService {
 	private final MesaRepository mesaRepository;
 	private final ProductoRepository productoRepository;
 	private final ProductoMesaRepository productoMesaRepository;
+	private final IngredienteService ingredienteService;
 
 	public PedidoMesaService(MesaRepository mesaRepository,
 			ProductoRepository productoRepository,
-			ProductoMesaRepository productoMesaRepository) {
+			ProductoMesaRepository productoMesaRepository,
+			IngredienteService ingredienteService) {
 		this.mesaRepository = mesaRepository;
 		this.productoRepository = productoRepository;
 		this.productoMesaRepository = productoMesaRepository;
+		this.ingredienteService = ingredienteService;
 	}
 
 	@Transactional
@@ -75,12 +84,72 @@ public class PedidoMesaService {
 			cantidadesPorProducto.merge(producto.getId(), item.getCantidad(), Integer::sum);
 		}
 
+		Map<Long, Producto> productosPorId = new LinkedHashMap<>();
+		Map<Long, Integer> cantidadesPorIngrediente = new LinkedHashMap<>();
+		Map<Long, Integer> stockRestantePorIngrediente = new LinkedHashMap<>();
+		List<ProductoStockInsuficienteDTO> productosInsuficientes = new ArrayList<>();
+		for (Map.Entry<Long, Integer> entry : cantidadesPorProducto.entrySet()) {
+			Long productoId = entry.getKey();
+			Integer cantidad = entry.getValue();
+			Producto producto = productoRepository.findByIdWithReceta(productoId)
+					.orElseThrow(() -> new NoSuchElementException("No existe un producto con id " + productoId));
+			String tipo = producto.getTipo();
+			if (tipo == null || (!"bebida".equalsIgnoreCase(tipo) && !"alimento".equalsIgnoreCase(tipo))) {
+				throw new IllegalArgumentException("Solo se pueden asignar productos de tipo bebida o alimento");
+			}
+			productosPorId.put(productoId, producto);
+
+			List<IngredienteStockInsuficienteDTO> ingredientesInsuficientes = new ArrayList<>();
+
+			for (ProductoReceta lineaReceta : producto.getLineasReceta()) {
+				if (lineaReceta == null || lineaReceta.getIngrediente() == null || lineaReceta.getIngrediente().getId() == null) {
+					continue;
+				}
+				Ingrediente ingrediente = lineaReceta.getIngrediente();
+				int requerido = (int) Math.ceil(lineaReceta.getCantidad() * cantidad);
+				cantidadesPorIngrediente.merge(ingrediente.getId(), requerido, Integer::sum);
+
+				int stockDisponible = stockRestantePorIngrediente.containsKey(ingrediente.getId())
+						? stockRestantePorIngrediente.get(ingrediente.getId())
+						: ingrediente.getStockActual();
+				if (stockDisponible < requerido) {
+					ingredientesInsuficientes.add(new IngredienteStockInsuficienteDTO(
+						ingrediente.getId(),
+						ingrediente.getNombre(),
+						requerido,
+						stockDisponible,
+						requerido - stockDisponible
+					));
+				}
+				stockRestantePorIngrediente.put(ingrediente.getId(), Math.max(0, stockDisponible - requerido));
+			}
+
+			if (!ingredientesInsuficientes.isEmpty()) {
+				productosInsuficientes.add(new ProductoStockInsuficienteDTO(
+					producto.getId(),
+					producto.getNombre(),
+					ingredientesInsuficientes
+				));
+			}
+		}
+
+		if (!productosInsuficientes.isEmpty()) {
+			PedidoMesaStockInsuficienteResponse response = new PedidoMesaStockInsuficienteResponse(
+				"No hay stock suficiente para registrar el pedido",
+				productosInsuficientes
+			);
+			throw new StockIngredientesInsuficienteException(response);
+		}
+
+		for (Map.Entry<Long, Integer> entry : cantidadesPorIngrediente.entrySet()) {
+			ingredienteService.consumirStock(entry.getKey(), entry.getValue());
+		}
+
 		List<ProductoMesa> registros = new ArrayList<>();
 		for (Map.Entry<Long, Integer> entry : cantidadesPorProducto.entrySet()) {
 			Long productoId = entry.getKey();
 			Integer cantidad = entry.getValue();
-			Producto producto = productoRepository.findById(productoId)
-					.orElseThrow(() -> new NoSuchElementException("No existe un producto con id " + productoId));
+			Producto producto = productosPorId.get(productoId);
 
 			ProductoMesa registroExistente = productoMesaRepository
 					.findByMesa_IdAndProducto_IdAndEstadoPago(mesa.getId(), productoId, estadoPago)

@@ -1,6 +1,22 @@
 <h1>Pedidos</h1>
 
-<div *ngIf="error" class="error">{{ error }}</div>
+<div *ngIf="error" class="error">
+  <div>{{ error }}</div>
+
+  <div *ngIf="productosSinStock.length > 0" class="stock-error-details">
+    <div class="stock-error-subtitle">Detalle de faltantes:</div>
+    <ul class="stock-error-products">
+      <li *ngFor="let producto of productosSinStock" class="stock-error-product-item">
+        <div class="stock-error-product-name">{{ producto.productoNombre }}</div>
+        <ul class="stock-error-ingredients">
+          <li *ngFor="let ingrediente of producto.ingredientesFaltantes">
+            {{ ingrediente.ingredienteNombre }}: requiere {{ ingrediente.cantidadRequerida }}, disponible {{ ingrediente.stockDisponible }}, faltan {{ ingrediente.cantidadFaltante }}
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
 
 <ng-container *ngIf="!selectedMesa; else vistaMesaActiva">
   <section class="mesas-section">

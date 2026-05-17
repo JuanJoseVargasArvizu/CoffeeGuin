@@ -1,4 +1,10 @@
 .error{color:#a33;padding:10px;margin-bottom:12px;background:#fff5f5;border:1px solid #f2c8c8;border-radius:10px}
+.stock-error-details{margin-top:8px}
+.stock-error-subtitle{font-weight:700;margin-bottom:4px}
+.stock-error-products{margin:0;padding-left:18px}
+.stock-error-product-item{margin-bottom:6px}
+.stock-error-product-name{font-weight:700}
+.stock-error-ingredients{margin:4px 0 0;padding-left:16px}
 .loading{color:#666;font-style:italic;padding:10px}
 .no-products{color:#777;padding:10px 0}
 

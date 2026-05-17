@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -40,6 +40,25 @@ interface TicketLinea {
   subtotal: number;
 }
 
+interface IngredienteFaltante {
+  ingredienteId: number;
+  ingredienteNombre: string;
+  cantidadRequerida: number;
+  stockDisponible: number;
+  cantidadFaltante: number;
+}
+
+interface ProductoStockInsuficiente {
+  productoId: number;
+  productoNombre: string;
+  ingredientesFaltantes: IngredienteFaltante[];
+}
+
+interface ErrorStockPedidoResponse {
+  mensaje?: string;
+  productos?: ProductoStockInsuficiente[];
+}
+
 @Component({
   selector: 'app-pedido',
   standalone: true,
@@ -70,6 +89,7 @@ export class PedidoComponent implements OnInit {
   descuentoPreview: DescuentoPreview | null = null;
   ventaFinalizada: VentaMesaResponse | null = null;
   ticketLineas: TicketLinea[] = [];
+  productosSinStock: ProductoStockInsuficiente[] = [];
 
   ngOnInit(): void {
     this.loadAll();
@@ -253,6 +273,9 @@ export class PedidoComponent implements OnInit {
   enviarComandaABackend(): void {
     if (!this.selectedMesa?.id || this.comandaNueva.length === 0) return;
 
+    this.error = '';
+    this.productosSinStock = [];
+
     const productos = this.comandaNueva
       .filter((linea) => linea.producto.id != null)
       .map((linea) => ({ id: linea.producto.id as number, cantidad: linea.cantidad }));
@@ -270,13 +293,51 @@ export class PedidoComponent implements OnInit {
 
     this.productoService.registrarPedidoMesa(payload).subscribe({
       next: () => {
+        this.error = '';
+        this.productosSinStock = [];
         this.comandaNueva = [];
         this.cargarPendientesMesa(this.selectedMesa!.id!);
       },
-      error: () => {
-        this.error = 'No se pudo registrar la comanda';
+      error: (err) => {
+        this.procesarErrorRegistroComanda(err);
       },
     });
+  }
+
+  private procesarErrorRegistroComanda(err: unknown): void {
+    if (err instanceof HttpErrorResponse && err.status === 409) {
+      const detalle = this.normalizarErrorStockPedido(err.error);
+      this.error = detalle.mensaje || 'No hay stock suficiente para registrar el pedido';
+      this.productosSinStock = detalle.productos;
+      return;
+    }
+
+    this.productosSinStock = [];
+    this.error = 'No se pudo registrar la comanda';
+  }
+
+  private normalizarErrorStockPedido(error: unknown): { mensaje: string; productos: ProductoStockInsuficiente[] } {
+    const data = (error ?? {}) as ErrorStockPedidoResponse;
+    const productos = Array.isArray(data.productos)
+      ? data.productos.map((producto) => ({
+          productoId: Number(producto?.productoId ?? 0),
+          productoNombre: producto?.productoNombre ?? 'Producto',
+          ingredientesFaltantes: Array.isArray(producto?.ingredientesFaltantes)
+            ? producto.ingredientesFaltantes.map((ingrediente) => ({
+                ingredienteId: Number(ingrediente?.ingredienteId ?? 0),
+                ingredienteNombre: ingrediente?.ingredienteNombre ?? 'Ingrediente',
+                cantidadRequerida: Number(ingrediente?.cantidadRequerida ?? 0),
+                stockDisponible: Number(ingrediente?.stockDisponible ?? 0),
+                cantidadFaltante: Number(ingrediente?.cantidadFaltante ?? 0),
+              }))
+            : [],
+        }))
+      : [];
+
+    return {
+      mensaje: data.mensaje ?? 'No hay stock suficiente para registrar el pedido',
+      productos,
+    };
   }
 
   abrirModalCobro(): void {

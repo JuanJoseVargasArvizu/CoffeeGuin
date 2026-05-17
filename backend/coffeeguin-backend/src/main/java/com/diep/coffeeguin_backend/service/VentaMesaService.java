@@ -1,17 +1,14 @@
 package com.diep.coffeeguin_backend.service;
 
 import com.diep.coffeeguin_backend.model.Cliente;
-import com.diep.coffeeguin_backend.model.Ingrediente;
 import com.diep.coffeeguin_backend.model.Mesa;
 import com.diep.coffeeguin_backend.model.Producto;
 import com.diep.coffeeguin_backend.model.ProductoMesa;
-import com.diep.coffeeguin_backend.model.ProductoReceta;
 import com.diep.coffeeguin_backend.model.Venta;
 import com.diep.coffeeguin_backend.model.VentaDetalle;
 import com.diep.coffeeguin_backend.model.VentaMesaRequest;
 import com.diep.coffeeguin_backend.model.VentaMesaResponse;
 import com.diep.coffeeguin_backend.repository.ClienteRepository;
-import com.diep.coffeeguin_backend.repository.IngredienteRepository;
 import com.diep.coffeeguin_backend.repository.MesaRepository;
 import com.diep.coffeeguin_backend.repository.ProductoMesaRepository;
 import com.diep.coffeeguin_backend.repository.ProductoRepository;
@@ -36,22 +33,19 @@ public class VentaMesaService {
 	private final ClienteRepository clienteRepository;
 	private final ProductoMesaRepository productoMesaRepository;
 	private final ProductoRepository productoRepository;
-	private final IngredienteRepository ingredienteRepository;
 
 	public VentaMesaService(VentaRepository ventaRepository,
 			VentaDetalleRepository ventaDetalleRepository,
 			MesaRepository mesaRepository,
 			ClienteRepository clienteRepository,
 			ProductoMesaRepository productoMesaRepository,
-			ProductoRepository productoRepository,
-			IngredienteRepository ingredienteRepository) {
+			ProductoRepository productoRepository) {
 		this.ventaRepository = ventaRepository;
 		this.ventaDetalleRepository = ventaDetalleRepository;
 		this.mesaRepository = mesaRepository;
 		this.clienteRepository = clienteRepository;
 		this.productoMesaRepository = productoMesaRepository;
 		this.productoRepository = productoRepository;
-		this.ingredienteRepository = ingredienteRepository;
 	}
 
 	@Transactional
@@ -74,7 +68,6 @@ public class VentaMesaService {
 					.orElseThrow(() -> new NoSuchElementException("No existe un cliente con id " + request.getClienteId()));
 		}
 
-		Map<Long, Integer> cantidadesPorIngrediente = new LinkedHashMap<>();
 		Map<Long, Producto> productosUnicos = new LinkedHashMap<>();
 		List<VentaDetalle> detalles = new ArrayList<>();
 		double totalOriginal = 0.0;
@@ -98,24 +91,6 @@ public class VentaMesaService {
 			detalle.setPrecioUnitario(producto.getPrecio());
 			detalle.setSubtotalLinea(subtotalLinea);
 			detalles.add(detalle);
-
-			for (ProductoReceta lineaReceta : producto.getLineasReceta()) {
-				if (lineaReceta == null || lineaReceta.getIngrediente() == null || lineaReceta.getIngrediente().getId() == null) {
-					continue;
-				}
-				double requerido = lineaReceta.getCantidad() * pedido.getCantidad();
-				cantidadesPorIngrediente.merge(lineaReceta.getIngrediente().getId(), (int) Math.ceil(requerido), Integer::sum);
-			}
-		}
-
-		for (Map.Entry<Long, Integer> entry : cantidadesPorIngrediente.entrySet()) {
-			Ingrediente ingrediente = ingredienteRepository.findById(entry.getKey())
-					.orElseThrow(() -> new NoSuchElementException("No existe un ingrediente con id " + entry.getKey()));
-			int nuevoStock = ingrediente.getStockActual() - entry.getValue();
-			if (nuevoStock < 0) {
-				throw new IllegalStateException("Stock insuficiente para el ingrediente con id " + entry.getKey());
-			}
-			ingrediente.setStockActual(nuevoStock);
 		}
 
 		double totalConDescuento = totalOriginal;
