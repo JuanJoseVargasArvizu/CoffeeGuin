@@ -3,10 +3,20 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 
+export type EstadoMesa = 'Libre' | 'Ocupada' | 'Reservada' | string;
+
 export interface Mesa {
   id?: number;
-  numero: number;  
-  estado: string;
+  numero: number;
+  estado: EstadoMesa;
+  cantidadAsientos: number;
+}
+
+export interface ActualizarAsientosResponse {
+  id: number;
+  numero: number;
+  mensaje: string;
+  nuevaCantidadAsientos: number;
 }
 
 @Injectable({
@@ -26,6 +36,12 @@ export class MesaService {
 
   create(mesa: Mesa): Observable<Mesa> {
     return this.http.post<Mesa>(this.apiUrl, mesa);
+  }
+
+  actualizarAsientos(id: number, cantidad: number): Observable<ActualizarAsientosResponse> {
+    const params = new HttpParams().set('cantidad', cantidad.toString());
+
+    return this.http.put<ActualizarAsientosResponse>(`${this.apiUrl}/${id}/asientos`, null, { params });
   }
 
   actualizarEstado(id: number, estado: string): Observable<Mesa> {

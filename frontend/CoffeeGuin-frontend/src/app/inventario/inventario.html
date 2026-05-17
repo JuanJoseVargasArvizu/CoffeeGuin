@@ -127,6 +127,21 @@
                     Se creará con el estado inicial "Libre".
                 </p>
             </div>
+
+			<div class="field" *ngIf="!mesaForm.id">
+				<label>Cantidad de asientos</label>
+				<input 
+					type="number" 
+					class="search" 
+					[(ngModel)]="mesaForm.cantidadAsientos" 
+					name="cantidadAsientos" 
+					placeholder="Ej. 2, 4, 6..." 
+					min="1"
+					required />
+				<p style="font-size: 12px; color: #666; margin-top: 4px;">
+					Este valor se enviará en el alta de la mesa.
+				</p>
+			</div>
             
             <div class="field" *ngIf="mesaForm.id">
                 <label>Estado de la mesa</label>
