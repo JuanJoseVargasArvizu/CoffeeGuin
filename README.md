@@ -8,7 +8,7 @@
   
 
 ## Objetivo
-Nuestro objetivo es crear y desarrollar un sistema de gestión de cafetería, el cual debe permitir que el negocio maneje sus actividades de forma fluída y eficiente. Este sistema simplificará la vida a los dueños y trabajadores del negocio, ya que podrán gestionar desde los ingredientes, hasta los descuentos de los clientes.
+Desarrollar e implementar el sistema Coffeeguin, un sistema de gestión eficiente, diseñado para optimizar las actividades operativas y administrativas de una cafetería. El proyecto busca simplificar la gestión diaria de dueños y empleados mediante la automatización de procesos clave, permitiendo un control eficiente y fluido que abarca desde la administración detallada de inventarios e ingredientes hasta la aplicación sistematizada de descuentos para los clientes. 
 
 
 ## Etapas del proyecto
